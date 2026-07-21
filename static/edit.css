@@ -1,0 +1,381 @@
+/* ==========================
+   VARIÁVEIS E CONFIGURAÇÕES GERAIS
+========================== */
+:root {
+    --azul: #1d4ed8;
+    --azul-hover: #1e40af;
+    --borda: #e2e8f0;
+    --texto-claro: #64748b;
+    --vermelho: #fd0000;
+    --vermelho-hover: #dc2626;
+    --cor-fonte: #1e293b;
+    --bg-escuro: #17375E;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background-color: var(--bg-escuro);
+    color: var(--cor-fonte);
+    line-height: 1.6;
+}
+
+.container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ==========================
+   HEADER E BANNER
+========================== */
+header {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--borda);
+    padding: 18px 0;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    color: var(--azul);
+    font-weight: 700;
+}
+
+.banner {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--borda);
+    padding: 30px 0;
+    margin-bottom: 30px;
+}
+
+.banner h2 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.banner p {
+    color: var(--texto-claro);
+    font-size: 1rem;
+}
+
+/* ==========================
+   FORMULÁRIO DE REGRAS
+========================== */
+.nota-corte {
+    background: white;
+    border: 1px solid var(--borda);
+    border-left: 6px solid var(--azul);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.nota-corte-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nota-corte label {
+    font-weight: 600;
+    color: var(--azul);
+    white-space: nowrap;
+}
+
+.campo-numero {
+    width: 100px;
+}
+
+.nota-corte-info {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Inputs e Selects Gerais */
+input, select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: .25s;
+    font-family: inherit;
+    background-color: #fff;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.15);
+}
+
+/* Card da pergunta */
+.bloco-pergunta {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.05);
+}
+
+.pergunta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.pergunta-header h4 {
+    color: var(--azul);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.rotulo-campo {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.campo-texto-pergunta,
+.selecionar-tipo-ponto {
+    margin-bottom: 15px;
+}
+
+/* Respostas Dinâmicas */
+.bloco-resposta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.campo-resposta-texto {
+    flex: 2;
+}
+
+.grupo-pontos {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ponto-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ponto-item span {
+    font-size: 13px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--texto-claro);
+}
+
+.campo-ponto-num {
+    width: 65px;
+    text-align: center;
+    padding: 8px;
+}
+
+/* Botões */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: .2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primario {
+    background: var(--azul);
+}
+
+.btn-primario:hover {
+    background: var(--azul-hover);
+}
+
+.btn-sucesso {
+    background: #10b981;
+}
+
+.btn-sucesso:hover {
+    background: #059669;
+}
+
+.btn-voltar {
+    background: #64748b;
+}
+
+.btn-voltar:hover {
+    background: #475569;
+}
+
+.btn-remover {
+    background: var(--vermelho);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: .2s;
+    font-size: .85rem;
+    white-space: nowrap;
+}
+
+.btn-remover:hover {
+    background: var(--vermelho-hover);
+}
+
+.btn-remover-opcao {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.btn-remover-opcao:hover {
+    background: #dc2626;
+}
+
+.btn-add-opcao {
+    margin-top: 10px;
+    background: #17375E;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.btn-add-opcao:hover {
+    background: #234f82;
+}
+
+/* Área dos botões de rodapé */
+.acoes {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
+
+.acoes .btn {
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+/* ==========================
+   MEDIA QUERIES (RESPONSIVIDADE)
+========================== */
+@media (max-width: 768px) {
+    .banner {
+        padding: 20px 0;
+    }
+    
+    .banner h2 {
+        font-size: 1.5rem;
+    }
+
+    .nota-corte {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .nota-corte-input-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .bloco-resposta {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        position: relative;
+        padding-right: 40px; /* Dá espaço para o botão "X" absoluto */
+    }
+
+    .campo-resposta-texto {
+        width: 100%;
+    }
+
+    .grupo-pontos {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .ponto-item {
+        flex: 1;
+    }
+
+    .campo-ponto-num {
+        width: 100%; /* Ocupa o espaço disponível do item */
+    }
+
+    .btn-remover-opcao {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+
+    .acoes {
+        flex-direction: column-reverse; /* Coloca o botão "Voltar" por último no mobile */
+        gap: 10px;
+    }
+
+    .acoes .btn {
+        max-width: 100%;
+        width: 100%;
+    }
+}

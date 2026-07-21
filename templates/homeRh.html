@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Painel do RH - MetroForm</title>
+
+    <!--Fonte do Google-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='rh.css') }}">
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+            animation: slideDown 0.25s ease-out;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h3 {
+            color: #1d4ed8;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            font-weight: bold;
+            color: #64748b;
+            cursor: pointer;
+            transition: 0.2s;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #fd0000;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .info-candidato {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-candidato p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .scores-badge {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-pontos {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal-divider {
+            border: 0;
+            border-top: 1px solid #e2e8f0;
+            margin: 20px 0;
+        }
+
+        .modal-pergunta-item {
+            margin-bottom: 18px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .modal-pergunta-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .modal-pergunta-titulo {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .modal-resposta-candidato {
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+            display: inline-block;
+            border-left: 3px solid #1d4ed8;
+            word-break: break-word;
+        }
+
+        .modal-footer {
+            padding: 15px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-ver-respostas {
+            background-color: #17375E;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-ver-respostas:hover {
+            background-color: #1d4ed8;
+        }
+
+        @media (max-width: 600px) {
+            .modal {
+                padding: 10px;
+            }
+
+            .modal-content {
+                margin: 8% auto;
+            }
+
+            .modal-body {
+                padding: 15px;
+            }
+
+            .scores-badge {
+                flex-direction: column;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- cabeçalho -->
+    <header>
+        <div class="container">
+
+            <div class="logo">
+                <h1> MetroForm </h1>
+            </div>
+
+            <nav>
+                <ul>
+                    {% if session.get('role') == 'admin' %}
+                    <li><a href="/admin/usuarios">Voltar ao Painel Admin</a></li>
+                    {% endif %}
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Banner -->
+    <section class="banner">
+        <div class="container">
+            <h2>Painel do RH</h2>
+            <p>
+                Visualize os candidatos cadastrados, acompanhe a compatibilidade
+                com as vagas e facilite o processo de recrutamento.
+            </p>
+        </div>
+    </section>
+
+    <!--Tabela-->
+    <main class="container">
+        <section class="painel">
+            <h2>Candidatos recentes</h2>
+
+            <div class="tabela">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Celular</th>
+                            <th>Perfil</th>
+                            <th>Pontuação</th>
+                            <th>LinkedIn / Currículo</th>
+                            <th>Ações</th> <!-- Adicionada coluna de Ações -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidato in candidatos %}
+                        <tr>
+                            <td>{{ candidato['Nome'] }}</td>
+                            <td>{{ candidato['Celular'] }}</td>
+                            <td>
+                                {% if candidato['perfil_calculado'] == 'Apto para Ambos' %}
+                                <span class="perfil ambos">🌟 Ambos</span>
+                                {% elif candidato['perfil_calculado'] == 'Administrativo' %}
+                                <span class="perfil administrativo">💼 Administrativo</span>
+                                {% elif candidato['perfil_calculado'] == 'Operacional' %}
+                                <span class="perfil operacional">🔧 Operacional</span>
+                                {% else %}
+                                <span class="perfil nenhum">❌ Nenhum</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ candidato['pontos_ordenacao'] }} pts</strong>
+                                <br>
+                                <small class="descricao">
+                                    {% if candidato['perfil_calculado'] == 'Administrativo' %}
+                                    Foco Administrativo
+                                    {% elif candidato['perfil_calculado'] == 'Operacional' %}
+                                    Foco Operacional
+                                    {% elif candidato['perfil_calculado'] == 'Apto para Ambos' %}
+                                    Compatível com ambas as áreas
+                                    {% else %}
+                                    Sem perfil definido
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td>
+                                {% if candidato['Coloque o link do seu linkedin/currículo:'] %}
+                                <a class="linkedin" href="{{ candidato['Coloque o link do seu linkedin/currículo:'] }}"
+                                    target="_blank">
+                                    Ver perfil
+                                </a>
+                                {% else %}
+                                Não informado
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn-ver-respostas" data-candidato='{{ candidato | tojson | safe }}'
+                                    onclick="abrirModalPorElemento(this)">
+                                    👁️ Respostas
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
+                <a href="/editRh" style="display: inline-flex; background-color: blue; color: white; text-decoration: none; 
+                   padding: 14px 35px; border-radius: 10px; font-weight: bold;">
+                    Gerenciar Perguntas e Pesos
+                </a>
+                <button onclick="history.back()"
+                    style="padding: 14px 35px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                    Voltar
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE RESPOSTAS -->
+    <div id="modal-respostas" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Respostas do Candidato</h3>
+                <span class="close-modal" onclick="fecharModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="info-candidato">
+                    <p><strong>Candidato:</strong> <span id="modal-nome-candidato">-</span></p>
+                    <p><strong>Contato:</strong> <span id="modal-celular-candidato">-</span></p>
+                    <p><strong>Perfil Identificado:</strong> <span id="modal-perfil-candidato">-</span></p>
+                </div>
+
+                <hr class="modal-divider">
+
+                <div id="modal-lista-perguntas"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-ver-respostas" style="background-color: #64748b;"
+                    onclick="fecharModal()">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT DO MODAL -->
+    <script>
+        function abrirModalRespostas(candidato) {
+            // Preenche as informações básicas no Modal
+            document.getElementById('modal-nome-candidato').textContent = candidato['Nome'] || 'Não informado';
+            document.getElementById('modal-celular-candidato').textContent = candidato['Celular'] || 'Não informado';
+            document.getElementById('modal-perfil-candidato').textContent = candidato['perfil_calculado'] || 'Sem perfil';
+
+            const containerLista = document.getElementById('modal-lista-perguntas');
+            containerLista.innerHTML = ''; // Limpa conteúdo anterior
+
+            // Chaves que não devem aparecer como perguntas dinâmicas do questionário
+            const camposExcluidos = [
+                'Nome', 'Celular', 'Coloque o link do seu linkedin/currículo:',
+                'perfil_calculado', 'pontos_ordenacao', 'pontos_admin', 'pontos_oper',
+                'Carimbo de data/hora', 'Email', 'ID'
+            ];
+
+            let temRespostas = false;
+
+            // Filtra e renderiza as perguntas reais do formulário
+            for (const [campo, resposta] of Object.entries(candidato)) {
+                const campoNormalizado = campo.trim().toLowerCase();
+
+                // Converte a resposta para texto e remove espaços vazios
+                const respostaTratada = (resposta !== null && resposta !== undefined) ? String(resposta).trim() : "";
+
+                // REGRA AQUI: Só exibe se NÃO for campo administrativo E se a resposta NÃO estiver em branco
+                if (!camposExcluidos.includes(campoNormalizado) && respostaTratada !== "") {
+
+                    temRespostas = true;
+                    const itemHTML = `
+                <div class="modal-pergunta-item">
+                    <div class="modal-pergunta-titulo">${campo}</div>
+                    <div class="modal-resposta-candidato">${respostaTratada}</div>
+                </div>
+            `;
+                    containerLista.insertAdjacentHTML('beforeend', itemHTML);
+                }
+            }
+
+            if (!temRespostas) {
+                containerLista.innerHTML = '<p style="color: #64748b; text-align: center;">Nenhuma resposta de questionário encontrada para este candidato.</p>';
+            }
+
+            // Abre o Modal
+            document.getElementById('modal-respostas').style.display = 'block';
+        }
+
+        function abrirModalPorElemento(botao) {
+            try {
+                // Recupera o JSON que guardamos no atributo HTML
+                const candidatoDados = JSON.parse(botao.getAttribute('data-candidato'));
+                abrirModalRespostas(candidatoDados);
+            } catch (erro) {
+                console.error("Erro ao ler os dados do candidato:", erro);
+                alert("Não foi possível carregar as respostas deste candidato.");
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-respostas').style.display = 'none';
+        }
+
+        // Fecha se o usuário clicar em qualquer espaço fora da caixa do modal
+        window.onclick = function (event) {
+            const modal = document.getElementById('modal-respostas');
+            if (event.target === modal) {
+                fecharModal();
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,278 @@
+/* RESET: O Reset CSS é um pequeno conjunto de regras que serve para "zerar" os estilos que o navegador coloca automaticamente. */
+
+*{ /* o "*" do reset significa todos os elementos da pagina */
+    margin: 0;
+    padding: 0; /*remove os espaços internos*/
+    box-sizing: border-box;
+}
+
+/* CORES */
+
+:root{
+    --azul:#1E3A5F; /*Criaçao de variaveis para melhor identificaçao */
+    --azul-claro:#4A90E2;
+    --cinza:#F5F5F5;
+    --branco:#FFFFFF;
+}
+
+/* ESTILO GERAL */
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--branco);
+    color: #333; /* Correção para evitar erro de variável indefinida */
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* HEADER */
+
+header {
+    background-color: var(--azul); /* seleciona variavel identificada antes */
+    display: flex; /* Os elementos ficam lado a lado */
+    justify-content: space-between; /* Ele organiza na horizontal, ja o Space Between coloca um elemento em cada ponta */
+    align-items: center; /* Agora ele organiza na vertical */
+    padding: 20px 60px; 
+}
+
+header h1 {
+    color: var(--branco);
+    font-size: 2rem;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+nav a {
+    color: var(--branco);
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    color: var(--azul-claro);
+}
+
+/* HERO */
+
+.hero{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 80px 60px;
+    gap: 50px;
+}
+
+.hero div{
+    flex:1;
+}
+
+.hero h2{
+    font-size: 3rem;
+    color: var(--azul);
+    margin-bottom: 20px;
+}
+
+.hero p{
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+}
+
+.hero a{
+    display:inline-block;
+    background-color: var(--azul);
+    color:white;
+    padding:15px 35px;
+    text-decoration:none;
+    border-radius:8px;
+    transition:.3s;
+}
+
+/* Ajuste na imagem para ela não quebrar ou vazar a tela */
+.hero-imagem img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* SOBRE */
+
+.sobre{
+    background-color: var(--cinza);
+    padding: 80px 60px;
+    text-align: center;
+}
+
+.sobre h2{
+    font-size: 2.2rem;
+    color: var(--azul);
+    margin-bottom: 20px;
+}
+
+.sobre p{
+    max-width: 800px;
+    margin: auto;
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+/* OPORTUNIDADES */
+
+.oportunidades{
+    padding: 80px 60px;
+    text-align: center;
+}
+
+.oportunidades h2{
+    color: var(--azul);
+    font-size: 2.2rem;
+    margin-bottom: 50px;
+}
+
+/* BENEFICIOS */ 
+
+.beneficios{
+    background: var(--cinza);
+    padding: 80px 0;
+}
+
+.beneficios h2{
+    text-align: center;
+    color: var(--azul);
+    font-size: 2.3rem;
+    margin-bottom: 50px;
+}
+
+/* CARDS GERENCIAIS (Para Oportunidades e Benefícios) */
+.cards{
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap; /* Permite que os cards quebrem para a linha de baixo se faltar espaço */
+    padding: 0 20px;
+}
+
+.card{
+    background: white;
+    width: 100%;
+    max-width: 330px; /* Garante que o card se adapte a telas menores sem vazar */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    transition: .3s;
+    text-align: left; /* Alinhamento mais polido para os textos do card */
+}
+
+/* Estilização específica para os cards dentro da seção oportunidades (fundo cinza) */
+.oportunidades .card {
+    background-color: var(--cinza);
+}
+
+.card:hover{
+    transform: translateY(-8px);
+}
+
+.card h3{
+    color: var(--azul);
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.card p{
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.card a{
+    display: inline-block;
+    text-decoration: none;
+    background: var(--azul);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 8px;
+    transition: .3s;
+}
+
+.card a:hover{
+    background: var(--azul-claro);
+}
+
+/* FOOTER */
+
+footer{
+    background-color:var(--azul);
+    color:white;
+    text-align:center;
+    padding:30px;
+}
+
+footer h3{
+    margin-bottom:15px;
+}
+
+footer p{
+    margin-bottom:8px;
+}
+
+
+/* ==========================================================================
+   ✨ REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) ✨
+   ========================================================================== */
+
+/* Quando a tela for menor que 768px (Tablets e Celulares grandes) */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column; /* Empilha a logo e o menu */
+        gap: 15px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    nav ul {
+        gap: 15px;
+        font-size: 0.95rem;
+    }
+
+    .hero {
+        flex-direction: column-reverse; /* Coloca a imagem em cima e o texto embaixo no mobile */
+        padding: 40px 20px;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .hero h2 {
+        font-size: 2rem; /* Diminui o título gigantesco no celular */
+    }
+
+    .sobre, .oportunidades {
+        padding: 60px 20px;
+    }
+
+    .sobre h2, .oportunidades h2, .beneficios h2 {
+        font-size: 1.8rem;
+    }
+
+    .cards {
+        gap: 20px;
+    }
+}
+
+/* Quando a tela for menor que 480px (Celulares menores) */
+@media (max-width: 480px) {
+    nav ul {
+        flex-direction: column; /* Menu de navegação vira uma lista vertical no celular */
+        gap: 10px;
+    }
+    
+    .hero a {
+        width: 100%; /* O botão de contratação ocupa a largura total no mobile */
+        box-sizing: border-box;
+    }
+}

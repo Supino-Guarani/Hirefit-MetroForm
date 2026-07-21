@@ -1,0 +1,196 @@
+{
+    "nota_de_corte": 20,
+    "regras": [
+        {
+            "pergunta": "Quando uma rotina ou processo importante no seu trabalho é alterado drasticamente pela empresa, como você reage?",
+            "respostas": {
+                "Compreendo que mudanças fazem parte do crescimento da empresa. Procuro entender o novo processo rapidamente e me adaptar para não perder produtividade.": {
+                    "admin": 3,
+                    "oper": 3
+                },
+                "Fico um pouco frustrado no início porque já estava acostumado, mas sigo as novas instruções sem reclamar.": {
+                    "admin": 2,
+                    "oper": 2
+                },
+                "Prefiro continuar fazendo do meu jeito antigo se eu perceber que funcionava melhor, evitando mudar a menos que seja muito cobrado.": {
+                    "admin": 1,
+                    "oper": 1
+                }
+            },
+            "tipo_pontuacao": "dividida"
+        },
+        {
+            "pergunta": "Você precisa trabalhar em um projeto com um colega que tem opiniões e um estilo de trabalho totalmente diferentes do seu. O que você faz?",
+            "respostas": {
+                "Evito confrontos e faço apenas a minha parte do trabalho, conversando com ele o mínimo necessário para evitar atritos.": {
+                    "admin": 2,
+                    "oper": 2
+                },
+                "Exijo que as coisas sejam feitas do meu jeito ou peço ao gestor para mudar de dupla, pois não consigo trabalhar com perfis assim.": {
+                    "admin": 1,
+                    "oper": 1
+                },
+                "Tento conversar com ele para encontrarmos um meio-termo, focando no que cada um faz de melhor para entregar o resultado.": {
+                    "admin": 3,
+                    "oper": 3
+                }
+            },
+            "tipo_pontuacao": "dividida"
+        },
+        {
+            "pergunta": "Você prefere trabalhar:",
+            "respostas": {
+                "Ambos": {
+                    "admin": 3,
+                    "oper": 3
+                },
+                "Em equipe": {
+                    "admin": 2,
+                    "oper": 2
+                },
+                "Individualmente": {
+                    "admin": 1,
+                    "oper": 1
+                }
+            },
+            "tipo_pontuacao": "dividida"
+        },
+        {
+            "pergunta": "Qual vaga você tem preferência?",
+            "respostas": {
+                "Administrativo": {
+                    "admin": 3,
+                    "oper": 0
+                },
+                "Ambos": {
+                    "admin": 2,
+                    "oper": 2
+                },
+                "Operacional": {
+                    "admin": 0,
+                    "oper": 3
+                }
+            },
+            "tipo_pontuacao": "dividida"
+        },
+        {
+            "pergunta": "Você tem facilidade para organizar documentos e informações?",
+            "respostas": {
+                "Não": 1,
+                "Sim": 3,
+                "Às vezes": 2
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Você possui experiência em atividades administrativas?",
+            "respostas": {
+                "Entre 1 e 3 anos": 3,
+                "Mais de 3 anos": 5,
+                "Menos de 1 ano": 2,
+                "Sem experiência": 1
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Qual seu nível de conhecimento com Excel, Word, E-mail?",
+            "respostas": {
+                "Avançado": 3,
+                "Básico": 1,
+                "Intermediário": 2
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Como você lida com várias tarefas ao mesmo tempo?",
+            "respostas": {
+                "Consigo com orientação": 2,
+                "Consigo organizar e priorizar as atividades": 3,
+                "Tenho dificuldade": 1
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Você já utilizou algum sistema de gestão(ERP)?",
+            "respostas": {
+                "Nunca utilizei": 1,
+                "Tenho conhecimento básico": 2,
+                "Utilizo com frequência": 3
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Você possui experiência em ambiente industrial ou de produção?",
+            "respostas": {
+                "Entre 1 e 3 anos": 3,
+                "Mais de 3 anos": 4,
+                "Menos de 1 ano": 2,
+                "Sem experiência": 1
+            },
+            "tipo_pontuacao": "oper_apenas"
+        },
+        {
+            "pergunta": "Você conhece as normas básicas de segurança do trabalho?",
+            "respostas": {
+                "Não": 1,
+                "Parcialmente": 2,
+                "Sim": 3
+            },
+            "tipo_pontuacao": "oper_apenas"
+        },
+        {
+            "pergunta": "Você está com a sua rotina cheia e recebe várias tarefas novas com prazos de entrega muito parecidos. Como você se organiza?",
+            "respostas": {
+                "Começo a fazer a tarefa que me parece mais fácil ou mais rápida de terminar para tentar eliminar volume de trabalho logo.": 2,
+                "Paro por alguns minutos, listo todas as tarefas, avalio o impacto de cada uma no setor e priorizo as mais críticas, avisando o gestor sobre o cronograma.": 3,
+                "Tento fazer um pouco de cada tarefa ao mesmo tempo para mostrar que estou trabalhando em tudo, mesmo correndo o risco de atrasar algumas.": 1
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Um cliente ou fornecedor liga cobrando com urgência um retorno sobre um processo que está atrasado em outro setor. Como você conduz a situação?",
+            "respostas": {
+                "Explico ao cliente que vou verificar internamente com prioridade, busco a resposta com o outro setor e retorno para o cliente com uma solução ou prazo real": 3,
+                "Informo ao cliente que a culpa não é do meu setor e que ele deve aguardar o setor responsável entrar em contato quando puder.": 1,
+                "Passo o telefone direto para o setor responsável pelo atraso, pois a resolução do problema não depende diretamente de mim.": 2
+            },
+            "tipo_pontuacao": "admin_apenas"
+        },
+        {
+            "pergunta": "Se você notar um colega de equipe deixando de usar um Equipamento de Proteção Individual (EPI) obrigatório na fábrica, qual é a sua atitude?",
+            "respostas": {
+                "Chamo o colega de canto em um momento oportuno e, de forma amigável, lembro a ele a importância do EPI para a segurança dele e da equipe.": 3,
+                "Não falo nada com o colega para evitar brigas, mas se o técnico de segurança passar, eu comento a situação com ele.": 2,
+                "Não faço nada, afinal, cada um sabe de si e a responsabilidade pelo uso do EPI é individual e da fiscalização da empresa": 1
+            },
+            "tipo_pontuacao": "oper_apenas"
+        },
+        {
+            "pergunta": "A máquina ou ferramenta que você opera apresentou um defeito no meio do turno, e a meta de produção do dia está atrasada. O que você faz?",
+            "respostas": {
+                "Desligo o equipamento por segurança, sinalizo a área e comunico imediatamente o encarregado ou a manutenção para resolver o problema da forma correta": 3,
+                "Paro de trabalhar e fico esperando o turno acabar ou que alguém note que a máquina está quebrada para tomar uma atitude": 1,
+                "Tento dar um \"jeitinho\" rápido ou reiniciar a máquina por conta própria para ver se volta a funcionar, evitando parar a produção": 2
+            },
+            "tipo_pontuacao": "oper_apenas"
+        },
+        {
+            "pergunta": "Você já operou máquinas ou equipamentos industriais?",
+            "respostas": {
+                "Nunca": 1,
+                "Poucas vezes": 2,
+                "Sim": 3
+            },
+            "tipo_pontuacao": "oper_apenas"
+        },
+        {
+            "pergunta": "Como reage ao realizar atividades repetitivas?",
+            "respostas": {
+                "Consigo realizar com facilidade": 2,
+                "Mantenho atenção e qualidade durante toda execução": 3,
+                "Tenho dificuldade em manter o foco": 1
+            },
+            "tipo_pontuacao": "oper_apenas"
+        }
+    ]
+}

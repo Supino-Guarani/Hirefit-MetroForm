@@ -1,0 +1,158 @@
+/* RESET: O Reset CSS é um pequeno conjunto de regras que serve para "zerar" os estilos que o navegador coloca automaticamente. */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ESTILO GERAL */
+:root {
+    --azul: #1F3B67;
+    --vermelho: #A51E22;
+    --branco: #FFFFFF;
+    --cinza: #F5F5F5;
+    --texto: #333333;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--cinza);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px; /* Garante um espaçamento de segurança nas bordas em celulares muito pequenos */
+}
+
+/* CARD LOGIN */
+.login-card {
+    background: white;
+    width: 100%; /* Permite que o card encolha em telas menores */
+    max-width: 400px; /* Mantém o tamanho original de 400px em computadores */
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.10);
+    transition: all 0.3s ease;
+}
+
+/* LOGO */
+.logo {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo img {
+    width: 70px;
+    margin-bottom: 10px;
+    height: auto; /* Mantém a proporção da imagem correta */
+}
+
+.logo h1 {
+    color: var(--azul);
+    font-size: 2rem;
+}
+
+/* TÍTULO */
+h2 {
+    text-align: center;
+    color: var(--azul);
+    margin-bottom: 10px;
+}
+
+.descricao {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: .95rem;
+}
+
+/* CAMPOS */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--texto);
+    font-weight: 500;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: .3s;
+}
+
+.input-group input:focus {
+    border-color: var(--azul);
+}
+
+/* BOTÃO */
+button {
+    width: 100%;
+    padding: 14px;
+    background: var(--azul);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: .3s;
+}
+
+button:hover {
+    background: var(--vermelho);
+}
+
+/* ERRO */
+.erro {
+    background: #fdeaea;
+    color: #b00020;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* VOLTAR */
+.voltar {
+    display: block;
+    text-align: center;
+    margin-top: 25px;
+    color: var(--azul);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.voltar:hover {
+    color: var(--vermelho);
+}
+
+
+/* ==========================================================================
+   ✨ AJUSTES ADICIONAIS PARA CELULARES (MEDIA QUERY) ✨
+   ========================================================================== */
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px; /* Reduz um pouco o espaçamento interno no mobile para sobrar mais espaço para os campos */
+        border-radius: 12px; /* Suaviza levemente os cantos em telas pequenas */
+    }
+
+    .logo h1 {
+        font-size: 1.75rem; /* Diminui sutilmente a logo em telas de celular */
+    }
+
+    h2 {
+        font-size: 1.35rem; /* Ajusta o título para não quebrar linhas de forma estranha */
+    }
+    
+    button {
+        padding: 12px; /* Torna o botão ligeiramente mais compacto e anatômico para o toque */
+    }
+}

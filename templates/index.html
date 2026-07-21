@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <title>Metroform home</title>
+    
+    <!--Favicon-->
+     <link rel="icon"
+           type="image/png"
+           href="{{ url_for('static', filename='imagens/metroform.png') }}">
+
+    <!-- Fonte do Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+<body>
+
+    
+<!-- Cabeçalho -->
+<header>
+
+    <!-- Logo -->
+    <h1>MetroForm</h1>
+
+    <!-- Menu de navegação -->
+    <nav> <!-- Serve para indicar que aqui existe uma navegação-->
+        <ul>
+           
+            <li><a href="{{url_for('login')}}">Login RH</a></li>
+            
+        </ul>
+    </nav>
+
+</header>
+    <!-- Banner principal -->
+    <main>
+         <!-- HERO -->
+        <section class="hero">
+
+            <div class="hero-texto"> <!-- guarda texto e botoes (hero section)-->
+
+                <h2>Conectando talentos às oportunidades certas.</h2>
+
+                <p>
+                A MetroForm busca profissionais para atuar nas áreas
+                administrativa e operacional, conectando pessoas às
+                oportunidades ideais para seu perfil.
+                </p>
+
+                <a href="https://tally.so/r/OD90N7">Formulário de contratação</a> <!--vai ter um futuro link-->
+
+            </div>
+
+            <div class="hero-imagem"> <!-- guarda imagens -->
+
+                <img src="{{ url_for('static', filename='imagens/ptrabalhando.png') }}"
+                alt="Equipe trabalhando"> 
+
+            </div>
+        
+        </section>
+
+        <!-- Sobre -->
+
+        <section class="sobre">
+            <h2> Sobre a MetroForm </h2>
+            
+            <p>A MetroForm acredita que um bom processo seletivo vai além do currículo. 
+                Nosso objetivo é conectar talentos às oportunidades certas, valorizando 
+                as habilidades e o perfil de cada candidato.
+            </p>
+
+        </section>
+        
+       <!-- OPORTUNIDADES -->
+
+        <section class="oportunidades">
+
+            <h2>Nossas oportunidades</h2>
+
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>💼 VAGA Administrativo </h3>
+
+                    <p>
+                         Organização de documentos, atendimento interno
+                        e apoio às atividades administrativas.
+                    </p>
+
+                    
+
+                </div>
+
+                <div class="card">
+
+                    <h3>🏭 VAGA Operacional </h3>
+
+                    <p>
+                        Apoio na linha de produção,
+                        organização do setor e controle de materiais.
+                    </p>
+
+                    
+
+                </div>
+
+               
+              
+            </div>
+
+        </section>
+
+        <!-- Benefícios -->
+        <section class="beneficios">
+
+            <div class="container">
+
+                <h2>Por que se juntar à nossa equipe?</h2>
+
+                <div class="cards">
+
+                    <div class="card">
+
+                        <h3>🤝 Ambiente colaborativo</h3>
+
+                        <p>
+
+                            Trabalhe em um ambiente acolhedor,
+                            colaborativo e com espírito de equipe.
+
+                        </p>
+
+                    </div>
+
+                    <div class="card">
+
+                        <h3>📈 Crescimento profissional</h3>
+
+                        <p>
+
+                            Incentivamos o desenvolvimento
+                            contínuo dos nossos colaboradores.
+
+                        </p>
+
+                    </div>
+
+                    <div class="card">
+
+                        <h3>🎓 Desenvolvimento</h3>
+
+                        <p>
+
+                            Aprenda novas habilidades,
+                            participe de treinamentos
+                            e evolua profissionalmente.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer>
+
+        <h3>MetroForm</h3>
+
+        <p>contato@metroform.com</p>
+
+        <p> © 2026 - Todos os direitos reservados. </p>
+
+    </footer>
+
+</body>
+
+</html>
