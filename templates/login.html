@@ -1,73 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,
 initial-scale=1.0">
-<title>Login RH | MetroForm</title>
-<!-- Fonte -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com"
-crossorigin>
-<link
-href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500
+    <title>Login RH | MetroForm</title>
+    <!-- Fonte -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500
 ;600;700&display=swap" rel="stylesheet">
-<!-- CSS -->
-<link rel="stylesheet" href="{{ url_for('static',
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static',
 filename='login.css') }}">
-<!-- Favicon -->
-<link rel="icon" href="{{ url_for('static',
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static',
 filename='imagens/metroform.png') }}">
 </head>
+
 <body>
-<div class="login-container">
-<div class="login-card">
-<div class="logo">
-<img src="{{ url_for('static',
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <img src="{{ url_for('static',
 filename='imagens/metroform.png') }}" alt="MetroForm">
-<h1>MetroForm</h1>
-</div>
+                <h1>MetroForm</h1>
+            </div>
 
-<h2>Acesso ao RH</h2>
-<p class="descricao">
-Entre com seu e-mail corporativo para acessar o painel
-de candidatos.
-</p>
-{% if erro %}
-<div class="erro">
-{{ erro }}
-</div>
-{% endif %}
-<form action="/login" method="POST">
-<div class="input-group">
-<label for="email">E-mail</label>
-<input
-type="email"
-id="email"
-name="email"
-placeholder="Digite seu e-mail"
+            <h2>Acesso ao RH</h2>
+            <p class="descricao">
+                Entre com seu e-mail corporativo para acessar o painel
+                de candidatos.
+            </p>
+            {% if erro %}
+            <div class="erro">
+                {{ erro }}
+            </div>
+            {% endif %}
+            <form action="/login" method="POST">
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required>
+                </div>
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+                </div>
+                <button type="submit">
 
-required>
-</div>
-<div class="input-group">
-<label for="senha">Senha</label>
-<input
-type="password"
-id="senha"
-name="senha"
-placeholder="Digite sua senha"
-
-required>
-</div>
-<button type="submit">
-
-Entrar
-</button>
-</form>
-<a href="/" class="voltar">
-← Voltar para a página inicial
-</a>
-</div>
-</div>
+                    Entrar
+                </button>
+            </form>
+            <a href="/" class="voltar">
+                ← Voltar para a página inicial
+            </a>
+        </div>
+    </div>
 </body>
+
 </html>

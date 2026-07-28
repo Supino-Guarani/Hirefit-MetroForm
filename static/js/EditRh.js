@@ -1,0 +1,183 @@
+
+const divDados = document.getElementById('dados-config-backend');
+let configOriginal = {};
+
+try {
+    configOriginal = JSON.parse(divDados.dataset.config);
+} catch (e) {
+    console.error("Erro ao ler as configurações do backend:", e);
+}
+
+let regras = configOriginal.regras || [];
+
+if (configOriginal.nota_de_corte !== undefined) {
+    document.getElementById('nota_de_corte').value = configOriginal.nota_de_corte;
+}
+
+function renderizarPerguntas() {
+    const container = document.getElementById('container-perguntas');
+    container.innerHTML = '';
+
+    regras.forEach((regra, indexPergunta) => {
+        let htmlPergunta = `
+                <div class="bloco-pergunta" id="pergunta-${indexPergunta}">
+                    <div class="pergunta-header">
+                        <h4>Pergunta #${indexPergunta + 1}</h4>
+                        <button type="button" class="btn-remover" onclick="removerPergunta(${indexPergunta})">🗑️ Excluir</button>
+                    </div>
+
+                    <label class="rotulo-campo">Nome exato da coluna na Planilha do Google / Tally:</label>
+                    <input type="text" class="campo-texto-pergunta" value="${regra.pergunta}" onchange="atualizarTextoPergunta(${indexPergunta}, this.value)" required>
+
+                    <label class="rotulo-campo">Tipo de Destino dos Pontos:</label>
+                    <select class="selecionar-tipo-ponto" onchange="mudarTipoPontuacao(${indexPergunta}, this.value)">
+                        <option value="dividida" ${regra.tipo_pontuacao === 'dividida' ? 'selected' : ''}>Pontuação Dividida (Soma em Admin E/OU Operacional)</option>
+                        <option value="admin_apenas" ${regra.tipo_pontuacao === 'admin_apenas' ? 'selected' : ''}>Somar APENAS em Administrativo</option>
+                        <option value="oper_apenas" ${regra.tipo_pontuacao === 'oper_apenas' ? 'selected' : ''}>Somar APENAS em Operacional</option>
+                    </select>
+
+                    <div style="margin-top: 15px;">
+                        <span class="rotulo-campo">Configurar Respostas e Pontos:</span>
+                        <div id="respostas-pergunta-${indexPergunta}">
+                            ${renderizarRespostas(regra, indexPergunta)}
+                        </div>
+                        <button type="button" class="btn-add-opcao" onclick="adicionarOpcaoResposta(${indexPergunta})">
+                            + Adicionar Opção de Resposta
+                        </button>
+                    </div>
+                </div>
+            `;
+        container.insertAdjacentHTML('beforeend', htmlPergunta);
+    });
+}
+
+function renderizarRespostas(regra, indexPergunta) {
+    let htmlRespostas = '';
+    const chavesRespostas = Object.keys(regra.respostas || {});
+
+    chavesRespostas.forEach((opcao) => {
+        const dados = regra.respostas[opcao];
+
+        if (regra.tipo_pontuacao === 'dividida') {
+            htmlRespostas += `
+                    <div class="bloco-resposta">
+                        <input type="text" class="campo-resposta-texto" placeholder="Texto da Resposta (Ex: Sim)" value="${opcao}" onchange="atualizarOpcaoTexto(${indexPergunta}, '${opcao}', this.value)" required>
+                        <div class="grupo-pontos">
+                            <div class="ponto-item">
+                                <span>Admin:</span>
+                                <input type="number" class="campo-ponto-num" value="${dados.admin || 0}" onchange="atualizarPontosDivididos(${indexPergunta}, '${opcao}', 'admin', this.value)" required>
+                            </div>
+                            <div class="ponto-item">
+                                <span>Oper:</span>
+                                <input type="number" class="campo-ponto-num" value="${dados.oper || 0}" onchange="atualizarPontosDivididos(${indexPergunta}, '${opcao}', 'oper', this.value)" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remover-opcao" onclick="removerOpcao(${indexPergunta}, '${opcao}')">✕</button>
+                    </div>
+                `;
+        } else {
+            htmlRespostas += `
+                    <div class="bloco-resposta">
+                        <input type="text" class="campo-resposta-texto" placeholder="Texto da Resposta" value="${opcao}" onchange="atualizarOpcaoTexto(${indexPergunta}, '${opcao}', this.value)" required>
+                        <div class="grupo-pontos">
+                            <div class="ponto-item">
+                                <span>Pontos:</span>
+                                <input type="number" class="campo-ponto-num" value="${dados || 0}" onchange="atualizarPontosSimples(${indexPergunta}, '${opcao}', this.value)" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remover-opcao" onclick="removerOpcao(${indexPergunta}, '${opcao}')">✕</button>
+                    </div>
+                `;
+        }
+    });
+
+    return htmlRespostas;
+}
+
+// --- FUNÇÕES DE INTERAÇÃO DO USUÁRIO ---
+function atualizarTextoPergunta(index, valor) {
+    regras[index].pergunta = valor;
+}
+
+function mudarTipoPontuacao(index, novoTipo) {
+    regras[index].tipo_pontuacao = novoTipo;
+    const opcoesAtuais = Object.keys(regras[index].respostas || {});
+    let novasRespostas = {};
+
+    opcoesAtuais.forEach(opcao => {
+        if (novoTipo === 'dividida') {
+            novasRespostas[opcao] = { "admin": 0, "oper": 0 };
+        } else {
+            novasRespostas[opcao] = 0;
+        }
+    });
+    regras[index].respostas = novasRespostas;
+    renderizarPerguntas();
+}
+
+function atualizarOpcaoTexto(indexPergunta, opcaoAntiga, opcaoNova) {
+    if (opcaoAntiga === opcaoNova) return;
+    const dadosGuardados = regras[indexPergunta].respostas[opcaoAntiga];
+    delete regras[indexPergunta].respostas[opcaoAntiga];
+    regras[indexPergunta].respostas[opcaoNova] = dadosGuardados;
+    renderizarPerguntas();
+}
+
+function atualizarPontosSimples(indexPergunta, opcao, valor) {
+    regras[indexPergunta].resverses = regras[indexPergunta].respostas || {};
+    regras[indexPergunta].respostas[opcao] = parseInt(valor) || 0;
+}
+
+function atualizarPontosDivididos(indexPergunta, opcao, chaveFator, valor) {
+    regras[indexPergunta].respostas[opcao][chaveFator] = parseInt(valor) || 0;
+}
+
+function adicionarOpcaoResposta(indexPergunta) {
+    const slotsOpcoes = Object.keys(regras[indexPergunta].respostas || {});
+    const textoPadrao = "Nova Opção " + (slotsOpcoes.length + 1);
+    if (!regras[indexPergunta].respostas) regras[indexPergunta].respostas = {};
+
+    if (regras[indexPergunta].tipo_pontuacao === 'dividida') {
+        regras[indexPergunta].respostas[textoPadrao] = { "admin": 0, "oper": 0 };
+    } else {
+        regras[indexPergunta].respostas[textoPadrao] = 0;
+    }
+    renderizarPerguntas();
+}
+
+function removerOpcao(indexPergunta, opcao) {
+    delete { ...regras[indexPergunta].respostas }[opcao];
+    delete regras[indexPergunta].respostas[opcao];
+    renderizarPerguntas();
+}
+
+function adicionarNovaPergunta() {
+    regras.push({
+        "pergunta": "Qual o texto da pergunta cadastrada?",
+        "tipo_pontuacao": "admin_apenas",
+        "respostas": {
+            "Sim": 3,
+            "Não": 1
+        }
+    });
+    renderizarPerguntas();
+}
+
+function removerPergunta(index) {
+    if (confirm("Deseja realmente excluir esta pergunta do cálculo?")) {
+        regras.splice(index, 1);
+        renderizarPerguntas();
+    }
+}
+
+function prepararEnvio(event) {
+    const notaCorteVal = document.getElementById('nota_de_corte').value;
+    const configuracaoFinal = {
+        "nota_de_corte": parseInt(notaCorteVal) || 20,
+        "regras": regras
+    };
+
+    document.getElementById('config_json_oculto').value = JSON.stringify(configuracaoFinal);
+}
+
+renderizarPerguntas();
