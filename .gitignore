@@ -1,0 +1,18 @@
+﻿.venv/
+__pycache__/
+*.pyc
+
+# Banco SQLite local
+prisma/*.db
+prisma/*.db-journal
+
+# Arquivos de ambiente
+.env
+.env.*
+
+# Arquivos do VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
