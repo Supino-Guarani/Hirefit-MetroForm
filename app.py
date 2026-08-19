@@ -1,10 +1,22 @@
-import json
-import os
-import pandas as pd
-from datetime import datetime, timedelta
 # pyrefly: ignore [missing-import]
-from flask import Flask, render_template, request, redirect, url_for, session
+import json
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from prisma import Prisma 
+from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    HRFlowable
+)
 
 app = Flask(__name__)
 app.secret_key = 'RecursosHumanos2026@'
@@ -13,70 +25,27 @@ app.secret_key = 'RecursosHumanos2026@'
 db = Prisma()
 db.connect()
 
-CONFIG_FILE = 'config_perguntas.json'
-#USUARIO_RH = "admin@hirefit.com"
-#SENHA_RH = "rh1234"
-
-def carregar_configuracoes():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    # Configuração padrão de fallback
-    return {"nota_de_corte": 20, "regras": []}
-
-def salvar_configuracoes(config):
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump(config, f, indent=4, ensure_ascii=False)
-
-def calcular_perfil_dinamico(candidato, config):
-    pontos_admin = 0
-    pontos_oper = 0
-    
-    # Processa cada regra cadastrada dinamicamente pelo RH
-    for regra in config.get("regras", []):
-        pergunta = regra.get("pergunta")
-        tipo = regra.get("tipo_pontuacao")
-        resposta_candidato = candidato.get(pergunta, "").strip()
-        
-        if not resposta_candidato:
-            continue
-            
-        valores = regra.get("respostas", {})
-        
-        if resposta_candidato in valores:
-            pontos_fator = valores[resposta_candidato]
-            if tipo == "admin_apenas":
-                pontos_admin += int(pontos_fator)
-            elif tipo == "oper_apenas":
-                pontos_oper += int(pontos_fator)
-            elif tipo == "dividida":
-                pontos_admin += int(pontos_fator.get("admin", 0))
-                pontos_oper += int(pontos_fator.get("oper", 0))
-
-    # Lógica de Classificação Baseada no JSON
-    nota_corte = config.get("nota_de_corte", 20)
-    apto_admin = pontos_admin >= nota_corte
-    apto_oper = pontos_oper >= nota_corte
-
-    if apto_admin and apto_oper:
-        status = "Apto para Ambos"
-    elif apto_admin:
-        status = "Administrativo"
-    elif apto_oper:
-        status = "Operacional"
-    else:
-        status = "Nenhum (Não Apto)"
-
-    return {
-        "status": status,
-        "pontos_admin": pontos_admin,
-        "pontos_oper": pontos_oper,
-        "total": pontos_admin + pontos_oper
-    }
-
 @app.route("/")
 def homepage():
-    return render_template('index.html')
+    formularios = db.formulario.find_many(
+        where={'ativo': True},
+        order={'criadoEm': 'desc'},
+        include={
+            'perguntas': {
+                'include': {
+                    'opcoes': True
+                },
+                'order_by': {
+                    'ordem': 'asc'
+                }
+            }
+        }
+    )
+
+    return render_template(
+        'index.html',
+        formularios=formularios
+    )
 
 # --- ROTA DE LOGIN COM PRISMA ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -157,82 +126,1731 @@ def deletar_usuario(email):
 
 @app.route('/homeRh')
 def rh_dashboard():
+
     if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
         return redirect(url_for('login'))
-        
-    URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQz0-d8M_B_1Mh6kabkVaNxjL-mVZXyqdLhkEUagg5BJAZX50u37ZlwBCEOBIMQnzQS_7twRxJpjUoO/pub?output=csv"
-    config = carregar_configuracoes()
-    
-    try:
-        df = pd.read_csv(URL_CSV)
-        
-        # Identificação automática da coluna de data
-        coluna_data = None
-        for col in ['Carimbo de data/hora', 'Timestamp', 'Date', 'Data']:
-            if col in df.columns:
-                coluna_data = col
-                break
-        
-        if coluna_data and not df.empty:
-            df[coluna_data] = pd.to_datetime(df[coluna_data], errors='coerce')
-            limite_tempo = datetime.now() - timedelta(days=30)
-            df = df[df[coluna_data] >= limite_tempo]
-        
-        df = df.fillna('')
-        candidatos = df.to_dict(orient='records')
-        
-        for candidato in candidatos:
-            calculo = calcular_perfil_dinamico(candidato, config)
-            status = calculo['status']
-            p_admin = calculo['pontos_admin']
-            p_oper = calculo['pontos_oper']
-            
-            candidato['perfil_calculado'] = status
-            candidato['pontos_admin'] = p_admin
-            candidato['pontos_oper'] = p_oper
-            candidato['pontos_total'] = calculo['total']
-            
-            if status == "Administrativo":
-                candidato['pontos_ordenacao'] = p_admin
-            elif status == "Operacional":
-                candidato['pontos_ordenacao'] = p_oper
-            elif status == "Apto para Ambos":
-                candidato['pontos_ordenacao'] = max(p_admin, p_oper)
+
+    # =====================================================
+    # FILTRO POR MÊS
+    # =====================================================
+
+    mes_filtro = request.args.get('mes', '').strip()
+
+    # =====================================================
+    # MONTA A CONSULTA
+    # =====================================================
+
+    where_candidatos = {}
+
+    if mes_filtro:
+
+        try:
+            ano, mes = map(int, mes_filtro.split('-'))
+
+            # Primeiro dia do mês selecionado
+            data_inicio = datetime(ano, mes, 1)
+
+            # Primeiro dia do mês seguinte
+            if mes == 12:
+                data_fim = datetime(ano + 1, 1, 1)
             else:
-                candidato['pontos_ordenacao'] = 0
-            
-        candidatos.sort(key=lambda x: x['pontos_ordenacao'], reverse=True)
-            
-    except Exception as e:
-        candidatos = []
-        print(f"Erro ao ler/filtrar a planilha: {e}")
+                data_fim = datetime(ano, mes + 1, 1)
 
-    return render_template('homeRh.html', candidatos=candidatos)
+            where_candidatos = {
+                'criadoEm': {
+                    'gte': data_inicio,
+                    'lt': data_fim
+                }
+            }
 
-# ROTA PARA ATUALIZAR CONFIGURAÇÕES VIA PAINEL
-@app.route('/salvar-regras', methods=['POST'])
-def salvar_regras():
-    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+        except (ValueError, TypeError):
+            mes_filtro = ''
+            where_candidatos = {}
+
+    # =====================================================
+    # BUSCA OS CANDIDATOS
+    # =====================================================
+
+    candidatos = db.candidato.find_many(
+        where=where_candidatos,
+        include={
+            'formulario': True,
+            'respostas': True
+        },
+        order={
+            'criadoEm': 'desc'
+        }
+    )
+
+    # =====================================================
+    # AGRUPAR CANDIDATOS PELO E-MAIL
+    # =====================================================
+
+    candidatos_agrupados = {}
+
+    for candidato in candidatos:
+
+        email = candidato.email.strip().lower()
+
+        if email not in candidatos_agrupados:
+
+            candidatos_agrupados[email] = {
+                'id': candidato.id,
+                'nome': candidato.nome,
+                'email': candidato.email,
+                'telefone': candidato.telefone,
+                'endereco': candidato.endereco,
+                'linkedin': candidato.linkedin,
+
+                'candidaturas': [],
+
+                # Mantemos também para compatibilidade
+                # com o JavaScript atual
+                'pontuacao': 0,
+                'formulario': None,
+                'respostas': []
+            }
+
+        # =================================================
+        # PROCESSA AS RESPOSTAS DESTA CANDIDATURA
+        # =================================================
+
+        respostas_view = []
+        pontuacao = 0
+
+        for resposta in candidato.respostas:
+
+            pergunta = db.pergunta.find_unique(
+                where={
+                    'id': resposta.perguntaId
+                }
+            )
+
+            opcao = db.opcao.find_unique(
+                where={
+                    'id': resposta.opcaoId
+                }
+            )
+
+            pontos = opcao.pontos if opcao else 0
+
+            pontuacao += pontos
+
+            respostas_view.append({
+                'pergunta': (
+                    pergunta.texto
+                    if pergunta
+                    else 'Pergunta não encontrada'
+                ),
+
+                'resposta': (
+                    opcao.texto
+                    if opcao
+                    else 'Resposta não informada'
+                ),
+
+                'pontos': pontos
+            })
+
+        # =================================================
+        # VERIFICA APROVAÇÃO
+        # =================================================
+
+        nota_corte = candidato.formulario.notaCorte or 0
+
+        aprovado = pontuacao >= nota_corte
+
+        # =================================================
+        # ADICIONA A CANDIDATURA
+        # =================================================
+
+        candidatos_agrupados[email]['candidaturas'].append({
+
+            'id': candidato.id,
+
+            'formulario': {
+                'titulo': candidato.formulario.titulo,
+                'categoria': candidato.formulario.categoria,
+                'notaCorte': nota_corte
+            },
+
+            'respostas': respostas_view,
+
+            'pontuacao': pontuacao,
+
+            'aprovado': aprovado
+
+        })
+
+    # =====================================================
+    # TRANSFORMA EM LISTA
+    # =====================================================
+
+    candidatos_view = list(
+        candidatos_agrupados.values()
+    )
+
+    # =====================================================
+    # CALCULA INFORMAÇÕES GERAIS
+    # =====================================================
+
+    for candidato in candidatos_view:
+
+        # Mantém compatibilidade com o HTML/JS atual
+        candidato['pontuacao'] = max(
+            [
+                candidatura['pontuacao']
+                for candidatura in candidato['candidaturas']
+            ],
+            default=0
+        )
+
+        if candidato['candidaturas']:
+
+            candidato['formulario'] = (
+                candidato['candidaturas'][0]['formulario']
+            )
+
+            # Junta todas as respostas para compatibilidade
+            # com o modal atual
+            candidato['respostas'] = []
+
+            for candidatura in candidato['candidaturas']:
+
+                for resposta in candidatura['respostas']:
+
+                    candidato['respostas'].append({
+
+                        'vaga':
+                            candidatura['formulario']['titulo'],
+
+                        'pergunta':
+                            resposta['pergunta'],
+
+                        'resposta':
+                            resposta['resposta'],
+
+                        'pontos':
+                            resposta['pontos']
+
+                    })
+
+    # =====================================================
+    # ORDENA PELO MAIOR DESEMPENHO
+    # =====================================================
+
+    candidatos_view.sort(
+        key=lambda candidato: candidato['pontuacao'],
+        reverse=True
+    )
+
+    return render_template(
+        'homeRh.html',
+        candidatos=candidatos_view,
+        mes_filtro=mes_filtro
+    )
+
+
+@app.route('/homeRh/candidato/<int:candidato_id>/pdf')
+def gerar_pdf_candidato(candidato_id):
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
         return redirect(url_for('login'))
-        
-    dados_recebidos = request.form.get('config_json')
-    try:
-        novo_json = json.loads(dados_recebidos)
-        salvar_configuracoes(novo_json)
-    except Exception as e:
-        print(f"Erro ao decodificar JSON enviado: {e}")
-        
-    # ALTERADO AQUI: Redireciona de volta para a tela de edição
-    return redirect(url_for('edit_rh_page'))
 
+    # =====================================================
+    # BUSCA A CANDIDATURA ORIGINAL
+    # =====================================================
+
+    candidatura_original = db.candidato.find_unique(
+        where={
+            'id': candidato_id
+        }
+    )
+
+    if not candidatura_original:
+        return "Candidato não encontrado", 404
+
+    email = candidatura_original.email
+
+    # =====================================================
+    # BUSCA TODAS AS CANDIDATURAS DO MESMO E-MAIL
+    # =====================================================
+
+    candidatos = db.candidato.find_many(
+        where={
+            'email': email
+        },
+        include={
+            'formulario': True,
+            'respostas': True
+        },
+        order={
+            'criadoEm': 'asc'
+        }
+    )
+
+    if not candidatos:
+        return "Candidato não encontrado", 404
+
+    # =====================================================
+    # ESTILOS
+    # =====================================================
+
+    estilos = getSampleStyleSheet()
+
+    titulo = ParagraphStyle(
+        'TituloPDF',
+        parent=estilos['Title'],
+        fontName='Helvetica-Bold',
+        fontSize=20,
+        leading=24,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#17375E'),
+        spaceAfter=8
+    )
+
+    subtitulo = ParagraphStyle(
+        'SubtituloPDF',
+        parent=estilos['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#64748B'),
+        spaceAfter=20
+    )
+
+    secao = ParagraphStyle(
+        'SecaoPDF',
+        parent=estilos['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=13,
+        leading=16,
+        textColor=colors.HexColor('#17375E'),
+        spaceBefore=12,
+        spaceAfter=10
+    )
+
+    texto = ParagraphStyle(
+        'TextoPDF',
+        parent=estilos['Normal'],
+        fontName='Helvetica',
+        fontSize=9.5,
+        leading=14,
+        textColor=colors.HexColor('#1E293B')
+    )
+
+    pequeno = ParagraphStyle(
+        'PequenoPDF',
+        parent=estilos['Normal'],
+        fontName='Helvetica',
+        fontSize=8.5,
+        leading=12,
+        textColor=colors.HexColor('#64748B')
+    )
+
+    # =====================================================
+    # CRIA PDF
+    # =====================================================
+
+    buffer = BytesIO()
+
+    documento = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=1.8 * cm,
+        leftMargin=1.8 * cm,
+        topMargin=1.8 * cm,
+        bottomMargin=1.8 * cm
+    )
+
+    elementos = []
+
+    primeiro = candidatos[0]
+
+    # =====================================================
+    # CABEÇALHO
+    # =====================================================
+
+    elementos.append(
+        Paragraph(
+            'MetroForm',
+            titulo
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            'Ficha completa do candidato',
+            subtitulo
+        )
+    )
+
+    elementos.append(
+        HRFlowable(
+            width='100%',
+            thickness=1,
+            color=colors.HexColor('#E2E8F0'),
+            spaceAfter=15
+        )
+    )
+
+    # =====================================================
+    # DADOS DO CANDIDATO
+    # =====================================================
+
+    elementos.append(
+        Paragraph(
+            'Dados do candidato',
+            secao
+        )
+    )
+
+    dados_candidato = [
+        [
+            Paragraph('<b>Nome</b>', texto),
+            Paragraph(primeiro.nome or 'Não informado', texto)
+        ],
+        [
+            Paragraph('<b>E-mail</b>', texto),
+            Paragraph(primeiro.email or 'Não informado', texto)
+        ],
+        [
+            Paragraph('<b>Telefone</b>', texto),
+            Paragraph(primeiro.telefone or 'Não informado', texto)
+        ],
+        [
+            Paragraph('<b>Endereço</b>', texto),
+            Paragraph(primeiro.endereco or 'Não informado', texto)
+        ],
+        [
+            Paragraph('<b>LinkedIn</b>', texto),
+            Paragraph(primeiro.linkedin or 'Não informado', texto)
+        ]
+    ]
+
+    tabela_dados = Table(
+        dados_candidato,
+        colWidths=[4 * cm, 13 * cm]
+    )
+
+    tabela_dados.setStyle(
+        TableStyle([
+            (
+                'BACKGROUND',
+                (0, 0),
+                (0, -1),
+                colors.HexColor('#F1F5F9')
+            ),
+            (
+                'BOX',
+                (0, 0),
+                (-1, -1),
+                0.7,
+                colors.HexColor('#E2E8F0')
+            ),
+            (
+                'INNERGRID',
+                (0, 0),
+                (-1, -1),
+                0.5,
+                colors.HexColor('#E2E8F0')
+            ),
+            (
+                'VALIGN',
+                (0, 0),
+                (-1, -1),
+                'TOP'
+            ),
+            (
+                'LEFTPADDING',
+                (0, 0),
+                (-1, -1),
+                9
+            ),
+            (
+                'RIGHTPADDING',
+                (0, 0),
+                (-1, -1),
+                9
+            ),
+            (
+                'TOPPADDING',
+                (0, 0),
+                (-1, -1),
+                8
+            ),
+            (
+                'BOTTOMPADDING',
+                (0, 0),
+                (-1, -1),
+                8
+            )
+        ])
+    )
+
+    elementos.append(tabela_dados)
+
+    elementos.append(Spacer(1, 15))
+
+    # =====================================================
+    # TODAS AS CANDIDATURAS
+    # =====================================================
+
+    for numero_candidatura, candidato in enumerate(
+        candidatos,
+        start=1
+    ):
+
+        pontuacao = 0
+        respostas = []
+
+        for resposta in candidato.respostas:
+
+            pergunta = db.pergunta.find_unique(
+                where={
+                    'id': resposta.perguntaId
+                }
+            )
+
+            opcao = db.opcao.find_unique(
+                where={
+                    'id': resposta.opcaoId
+                }
+            )
+
+            pontos = opcao.pontos if opcao else 0
+
+            pontuacao += pontos
+
+            respostas.append({
+                'pergunta':
+                    pergunta.texto
+                    if pergunta
+                    else 'Pergunta não encontrada',
+
+                'resposta':
+                    opcao.texto
+                    if opcao
+                    else 'Resposta não informada',
+
+                'pontos':
+                    pontos
+            })
+
+        nota_corte = candidato.formulario.notaCorte or 0
+
+        aprovado = pontuacao >= nota_corte
+
+        # =================================================
+        # TÍTULO DA CANDIDATURA
+        # =================================================
+
+        elementos.append(
+            Paragraph(
+                f'Candidatura {numero_candidatura}: '
+                f'{candidato.formulario.titulo}',
+                secao
+            )
+        )
+
+        # =================================================
+        # STATUS
+        # =================================================
+
+        status = (
+            'APROVADO'
+            if aprovado
+            else 'NÃO APROVADO'
+        )
+
+        cor_status = (
+            '#16A34A'
+            if aprovado
+            else '#DC2626'
+        )
+
+        elementos.append(
+            Paragraph(
+                f'<b>Status:</b> '
+                f'<font color="{cor_status}">'
+                f'<b>{status}</b>'
+                f'</font>',
+                texto
+            )
+        )
+
+        elementos.append(Spacer(1, 5))
+
+        # =================================================
+        # DADOS DA VAGA
+        # =================================================
+
+        dados_vaga = [
+            [
+                Paragraph('<b>Vaga</b>', texto),
+                Paragraph(
+                    candidato.formulario.titulo,
+                    texto
+                )
+            ],
+            [
+                Paragraph('<b>Categoria</b>', texto),
+                Paragraph(
+                    candidato.formulario.categoria,
+                    texto
+                )
+            ],
+            [
+                Paragraph('<b>Nota de corte</b>', texto),
+                Paragraph(
+                    str(nota_corte),
+                    texto
+                )
+            ],
+            [
+                Paragraph('<b>Pontuação</b>', texto),
+                Paragraph(
+                    f'<b>{pontuacao} pts</b>',
+                    texto
+                )
+            ]
+        ]
+
+        tabela_vaga = Table(
+            dados_vaga,
+            colWidths=[4 * cm, 13 * cm]
+        )
+
+        tabela_vaga.setStyle(
+            TableStyle([
+                (
+                    'BACKGROUND',
+                    (0, 0),
+                    (0, -1),
+                    colors.HexColor('#F1F5F9')
+                ),
+                (
+                    'BOX',
+                    (0, 0),
+                    (-1, -1),
+                    0.7,
+                    colors.HexColor('#E2E8F0')
+                ),
+                (
+                    'INNERGRID',
+                    (0, 0),
+                    (-1, -1),
+                    0.5,
+                    colors.HexColor('#E2E8F0')
+                ),
+                (
+                    'VALIGN',
+                    (0, 0),
+                    (-1, -1),
+                    'TOP'
+                ),
+                (
+                    'LEFTPADDING',
+                    (0, 0),
+                    (-1, -1),
+                    9
+                ),
+                (
+                    'RIGHTPADDING',
+                    (0, 0),
+                    (-1, -1),
+                    9
+                ),
+                (
+                    'TOPPADDING',
+                    (0, 0),
+                    (-1, -1),
+                    8
+                ),
+                (
+                    'BOTTOMPADDING',
+                    (0, 0),
+                    (-1, -1),
+                    8
+                )
+            ])
+        )
+
+        elementos.append(tabela_vaga)
+
+        elementos.append(Spacer(1, 10))
+
+        # =================================================
+        # RESPOSTAS
+        # =================================================
+
+        elementos.append(
+            Paragraph(
+                'Respostas',
+                ParagraphStyle(
+                    f'SubSecao{numero_candidatura}',
+                    parent=secao,
+                    fontSize=11,
+                    spaceBefore=8,
+                    spaceAfter=8
+                )
+            )
+        )
+
+        if not respostas:
+
+            elementos.append(
+                Paragraph(
+                    'Nenhuma resposta registrada.',
+                    pequeno
+                )
+            )
+
+        else:
+
+            for indice, resposta in enumerate(
+                respostas,
+                start=1
+            ):
+
+                elementos.append(
+                    Paragraph(
+                        f'<b>{indice}. '
+                        f'{resposta["pergunta"]}</b>',
+                        texto
+                    )
+                )
+
+                elementos.append(
+                    Paragraph(
+                        f'Resposta: '
+                        f'{resposta["resposta"]}',
+                        texto
+                    )
+                )
+
+                elementos.append(
+                    Paragraph(
+                        f'Pontuação: '
+                        f'{resposta["pontos"]} pts',
+                        pequeno
+                    )
+                )
+
+                elementos.append(
+                    Spacer(1, 7)
+                )
+
+        # Separador entre vagas
+        if numero_candidatura < len(candidatos):
+
+            elementos.append(
+                Spacer(1, 10)
+            )
+
+            elementos.append(
+                HRFlowable(
+                    width='100%',
+                    thickness=0.8,
+                    color=colors.HexColor('#CBD5E1'),
+                    spaceAfter=10
+                )
+            )
+
+    # =====================================================
+    # RODAPÉ
+    # =====================================================
+
+    elementos.append(
+        Spacer(1, 20)
+    )
+
+    elementos.append(
+        HRFlowable(
+            width='100%',
+            thickness=0.7,
+            color=colors.HexColor('#E2E8F0'),
+            spaceAfter=8
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            'Documento gerado pelo sistema MetroForm.',
+            pequeno
+        )
+    )
+
+    # =====================================================
+    # GERA PDF
+    # =====================================================
+
+    documento.build(elementos)
+
+    buffer.seek(0)
+
+    nome_arquivo = (
+        f'candidato_{primeiro.id}.pdf'
+    )
+
+    return send_file(
+        buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=nome_arquivo
+    )
+
+
+# ============================================================
+# GERENCIAMENTO DE FORMULÁRIOS / VAGAS
+# ============================================================
 
 @app.route('/editRh')
 def edit_rh_page():
-    if 'usuario_logado' not in session or session.get('role')not in ['rh', 'admin']:
+
+    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
         return redirect(url_for('login'))
-        
-    config = carregar_configuracoes()
-    return render_template('EditRH.html', config=config)
+
+    formularios = db.formulario.find_many(
+        order={'criadoEm': 'desc'},
+        include={
+            'perguntas': {
+                'include': {
+                    'opcoes': True
+                },
+                'order_by': {
+                    'ordem': 'asc'
+                }
+            }
+        }
+    )
+
+    vaga_aberta = request.args.get('vaga', type=int)
+
+    return render_template(
+        'FormulariosRH.html',
+        formularios=formularios,
+        vaga_aberta=vaga_aberta
+    )
+
+
+@app.route('/formulario/novo', methods=['POST'])
+def novo_formulario():
+
+    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+        return redirect(url_for('login'))
+
+    titulo = request.form.get('titulo', '').strip()
+    descricao = request.form.get('descricao', '').strip()
+    categoria = request.form.get('categoria', '').strip()
+    nota_corte = request.form.get('nota_corte', '0')
+
+    if not titulo:
+        return redirect(url_for('edit_rh_page'))
+
+    try:
+        nota_corte = int(nota_corte)
+    except (ValueError, TypeError):
+        nota_corte = 0
+
+    formulario = db.formulario.create(
+        data={
+            'titulo': titulo,
+            'descricao': descricao if descricao else None,
+            'categoria': categoria,
+            'notaCorte': nota_corte,
+            'ativo': True
+        }
+    )
+
+    return redirect(
+        url_for(
+            'edit_rh_page',
+            vaga=formulario.id
+        )
+    )
+
+@app.route('/formulario/<int:formulario_id>/editar', methods=['GET', 'POST'])
+def editar_formulario(formulario_id):
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
+        return redirect(url_for('login'))
+
+    formulario = db.formulario.find_unique(
+        where={'id': formulario_id},
+        include={
+            'perguntas': {
+                'include': {
+                    'opcoes': True
+                },
+                'order_by': {
+                    'ordem': 'asc'
+                }
+            }
+        }
+    )
+
+    if not formulario:
+        return redirect(url_for('edit_rh_page'))
+
+    if request.method == 'POST':
+
+        titulo = request.form.get('titulo', '').strip()
+        descricao = request.form.get('descricao', '').strip()
+        categoria = request.form.get('categoria', '').strip()
+        nota_corte = request.form.get('nota_corte', '0')
+
+        try:
+            nota_corte = int(nota_corte)
+        except (ValueError, TypeError):
+            nota_corte = 0
+
+        db.formulario.update(
+            where={'id': formulario_id},
+            data={
+                'titulo': titulo,
+                'descricao': descricao if descricao else None,
+                'categoria': categoria,
+                'notaCorte': nota_corte
+            }
+        )
+
+        # ============================================
+        # RESPOSTA AJAX
+        # ============================================
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+            return {
+                'sucesso': True,
+                'mensagem': 'Vaga atualizada com sucesso.',
+                'formulario_id': formulario_id
+            }
+
+        # ============================================
+        # ENVIO NORMAL
+        # ============================================
+
+        return redirect(
+            url_for(
+                'edit_rh_page',
+                vaga=formulario_id
+            )
+        )
+
+    return redirect(
+        url_for(
+            'edit_rh_page',
+            vaga=formulario_id
+        )
+    )
+
+
+@app.route(
+    '/formulario/<int:formulario_id>/pergunta/nova',
+    methods=['GET', 'POST']
+)
+def nova_pergunta(formulario_id):
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
+        return redirect(url_for('login'))
+
+    # ============================================================
+    # BUSCA A VAGA
+    # ============================================================
+
+    formulario = db.formulario.find_unique(
+        where={'id': formulario_id},
+        include={
+            'perguntas': True
+        }
+    )
+
+    if not formulario:
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {
+                'sucesso': False,
+                'erro': 'Vaga não encontrada.'
+            }, 404
+
+        return redirect(url_for('edit_rh_page'))
+
+    # ============================================================
+    # CRIAÇÃO DA PERGUNTA
+    # ============================================================
+
+    if request.method == 'POST':
+
+        texto = request.form.get(
+            'texto',
+            ''
+        ).strip()
+
+        obrigatoria = (
+            request.form.get('obrigatoria') == 'on'
+        )
+
+        # ========================================================
+        # VALIDAÇÃO
+        # ========================================================
+
+        if not texto:
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return {
+                    'sucesso': False,
+                    'erro': 'Digite o texto da pergunta.'
+                }, 400
+
+            return redirect(
+                url_for(
+                    'edit_rh_page',
+                    vaga=formulario_id
+                )
+            )
+
+        # ========================================================
+        # DEFINE A ORDEM
+        # ========================================================
+
+        maior_ordem = max(
+            [p.ordem for p in formulario.perguntas],
+            default=0
+        )
+
+        nova_ordem = maior_ordem + 1
+
+        # ========================================================
+        # CRIA A PERGUNTA
+        # ========================================================
+
+        pergunta = db.pergunta.create(
+            data={
+                'texto': texto,
+                'ordem': nova_ordem,
+                'obrigatoria': obrigatoria,
+                'formulario': {
+                    'connect': {
+                        'id': formulario_id
+                    }
+                }
+            }
+        )
+
+        # ========================================================
+        # RECEBE AS OPÇÕES
+        # ========================================================
+
+        textos_opcoes = request.form.getlist(
+            'opcao_texto'
+        )
+
+        pontos_opcoes = request.form.getlist(
+            'opcao_pontos'
+        )
+
+        ordem_opcao = 1
+
+        # ========================================================
+        # CRIA AS OPÇÕES
+        # ========================================================
+
+        for texto_opcao, pontos_opcao in zip(
+            textos_opcoes,
+            pontos_opcoes
+        ):
+
+            texto_opcao = texto_opcao.strip()
+
+            if not texto_opcao:
+                continue
+
+            try:
+                pontos = int(pontos_opcao)
+
+            except (ValueError, TypeError):
+                pontos = 0
+
+            db.opcao.create(
+                data={
+                    'texto': texto_opcao,
+                    'pontos': pontos,
+                    'ordem': ordem_opcao,
+                    'pergunta': {
+                        'connect': {
+                            'id': pergunta.id
+                        }
+                    }
+                }
+            )
+
+            ordem_opcao += 1
+
+        # ========================================================
+        # RESPOSTA AJAX
+        # ========================================================
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+            return {
+                'sucesso': True,
+                'mensagem': 'Pergunta criada com sucesso.',
+                'pergunta_id': pergunta.id,
+                'formulario_id': formulario_id
+            }
+
+        # ========================================================
+        # ENVIO NORMAL
+        # ========================================================
+
+        return redirect(
+            url_for(
+                'edit_rh_page',
+                vaga=formulario_id
+            )
+        )
+
+    # ============================================================
+    # GET
+    # ============================================================
+    # Não precisamos mais de NovaPergunta.html.
+
+    return redirect(
+        url_for(
+            'edit_rh_page',
+            vaga=formulario_id
+        )
+    )
+
+@app.route(
+    '/pergunta/<int:pergunta_id>/editar',
+    methods=['GET', 'POST']
+)
+def editar_pergunta(pergunta_id):
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
+        return redirect(url_for('login'))
+
+    pergunta = db.pergunta.find_unique(
+        where={'id': pergunta_id},
+        include={
+            'opcoes': True,
+            'formulario': True
+        }
+    )
+
+    if not pergunta:
+        return redirect(url_for('edit_rh_page'))
+
+    if request.method == 'POST':
+
+        texto = request.form.get(
+            'texto',
+            ''
+        ).strip()
+
+        obrigatoria = (
+            request.form.get('obrigatoria') == 'on'
+        )
+
+        # ========================================================
+        # VALIDAÇÃO
+        # ========================================================
+
+        if not texto:
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+                return {
+                    'sucesso': False,
+                    'erro': 'Digite o texto da pergunta.'
+                }, 400
+
+            return redirect(
+                url_for(
+                    'edit_rh_page',
+                    vaga=pergunta.formularioId
+                )
+            )
+
+        # ========================================================
+        # ATUALIZA A PERGUNTA
+        # ========================================================
+
+        db.pergunta.update(
+            where={
+                'id': pergunta_id
+            },
+            data={
+                'texto': texto,
+                'obrigatoria': obrigatoria
+            }
+        )
+
+        # ========================================================
+        # OPÇÕES EXISTENTES
+        # ========================================================
+
+        opcoes_ids = request.form.getlist(
+            'opcao_id'
+        )
+
+        textos_opcoes = request.form.getlist(
+            'opcao_texto'
+        )
+
+        pontos_opcoes = request.form.getlist(
+            'opcao_pontos'
+        )
+
+        opcoes_removidas = request.form.getlist(
+            'opcoes_removidas'
+        )
+
+        # ========================================================
+        # EXCLUI OPÇÕES REMOVIDAS
+        # ========================================================
+
+        for opcao_id in opcoes_removidas:
+
+            try:
+
+                opcao_id = int(opcao_id)
+
+                db.opcao.delete(
+                    where={
+                        'id': opcao_id
+                    }
+                )
+
+            except (ValueError, TypeError):
+                continue
+
+        # ========================================================
+        # ATUALIZA OPÇÕES EXISTENTES
+        # ========================================================
+
+        for opcao_id, texto_opcao, pontos_opcao in zip(
+            opcoes_ids,
+            textos_opcoes,
+            pontos_opcoes
+        ):
+
+            if not opcao_id:
+                continue
+
+            texto_opcao = texto_opcao.strip()
+
+            if not texto_opcao:
+                continue
+
+            try:
+                pontos = int(pontos_opcao)
+
+            except (ValueError, TypeError):
+                pontos = 0
+
+            db.opcao.update(
+                where={
+                    'id': int(opcao_id)
+                },
+                data={
+                    'texto': texto_opcao,
+                    'pontos': pontos
+                }
+            )
+
+        # ========================================================
+        # NOVAS OPÇÕES
+        # ========================================================
+
+        novas_opcoes_texto = request.form.getlist(
+            'nova_opcao_texto'
+        )
+
+        novas_opcoes_pontos = request.form.getlist(
+            'nova_opcao_pontos'
+        )
+
+        maior_ordem = max(
+            [
+                opcao.ordem
+                for opcao in pergunta.opcoes
+            ],
+            default=0
+        )
+
+        ordem_opcao = maior_ordem + 1
+
+        for texto_opcao, pontos_opcao in zip(
+            novas_opcoes_texto,
+            novas_opcoes_pontos
+        ):
+
+            texto_opcao = texto_opcao.strip()
+
+            if not texto_opcao:
+                continue
+
+            try:
+                pontos = int(pontos_opcao)
+
+            except (ValueError, TypeError):
+                pontos = 0
+
+            db.opcao.create(
+                data={
+                    'texto': texto_opcao,
+                    'pontos': pontos,
+                    'ordem': ordem_opcao,
+                    'pergunta': {
+                        'connect': {
+                            'id': pergunta_id
+                        }
+                    }
+                }
+            )
+
+            ordem_opcao += 1
+
+        # ========================================================
+        # RESPOSTA AJAX
+        # ========================================================
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+            return {
+                'sucesso': True,
+                'mensagem': 'Pergunta atualizada com sucesso.',
+                'pergunta_id': pergunta_id,
+                'formulario_id': pergunta.formularioId
+            }
+
+        # ========================================================
+        # ENVIO NORMAL
+        # ========================================================
+
+        return redirect(
+            url_for(
+                'edit_rh_page',
+                vaga=pergunta.formularioId
+            )
+        )
+
+    # ============================================================
+    # GET
+    # ============================================================
+    # A edição acontece pelo modal de FormulariosRH.html.
+
+    return redirect(
+        url_for(
+            'edit_rh_page',
+            vaga=pergunta.formularioId
+        )
+    )
+
+@app.route('/pergunta/<int:pergunta_id>/excluir', methods=['POST'])
+def excluir_pergunta(pergunta_id):
+
+    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+        return redirect(url_for('login'))
+
+    pergunta = db.pergunta.find_unique(
+        where={'id': pergunta_id}
+    )
+
+    if not pergunta:
+        return redirect(url_for('edit_rh_page'))
+
+    formulario_id = pergunta.formularioId
+
+    db.pergunta.delete(
+        where={
+            'id': pergunta_id
+        }
+    )
+
+    return redirect(
+        url_for(
+            'editar_formulario',
+            formulario_id=formulario_id
+        )
+    )
+
+@app.route('/formulario/<int:formulario_id>/excluir', methods=['POST'])
+def excluir_formulario(formulario_id):
+    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+        return redirect(url_for('login'))
+
+    formulario = db.formulario.find_unique(
+        where={'id': formulario_id}
+    )
+
+    if formulario:
+        db.formulario.delete(
+            where={'id': formulario_id}
+        )
+
+    return redirect(url_for('edit_rh_page'))
+
+
+@app.route(
+    '/formulario/<int:formulario_id>/perguntas/salvar',
+    methods=['POST']
+)
+def salvar_perguntas(formulario_id):
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
+        return redirect(url_for('login'))
+
+
+    # =====================================================
+    # VERIFICA SE A VAGA EXISTE
+    # =====================================================
+
+    formulario = db.formulario.find_unique(
+        where={
+            'id': formulario_id
+        },
+        include={
+            'perguntas': True
+        }
+    )
+
+
+    if not formulario:
+        return redirect(
+            url_for('edit_rh_page')
+        )
+
+
+    # =====================================================
+    # RECEBE AS PERGUNTAS
+    # =====================================================
+
+    perguntas_json = request.form.get(
+        'perguntas_json',
+        ''
+    )
+
+
+    if not perguntas_json:
+        return redirect(
+            url_for(
+                'edit_rh_page',
+                vaga=formulario_id
+            )
+        )
+
+
+    try:
+
+        perguntas = json.loads(
+            perguntas_json
+        )
+
+    except (json.JSONDecodeError, TypeError):
+
+        return redirect(
+            url_for(
+                'edit_rh_page',
+                vaga=formulario_id
+            )
+        )
+
+
+    # =====================================================
+    # DEFINE A PRÓXIMA ORDEM
+    # =====================================================
+
+    maior_ordem = max(
+        [
+            pergunta.ordem
+            for pergunta in formulario.perguntas
+        ],
+        default=0
+    )
+
+
+    ordem_pergunta = maior_ordem + 1
+
+
+    # =====================================================
+    # CRIA TODAS AS PERGUNTAS
+    # =====================================================
+
+    for dados_pergunta in perguntas:
+
+        texto = str(
+            dados_pergunta.get(
+                'texto',
+                ''
+            )
+        ).strip()
+
+
+        if not texto:
+            continue
+
+
+        obrigatoria = bool(
+            dados_pergunta.get(
+                'obrigatoria',
+                False
+            )
+        )
+
+
+        # =================================================
+        # CRIA PERGUNTA
+        # =================================================
+
+        pergunta = db.pergunta.create(
+            data={
+
+                'texto': texto,
+
+                'ordem': ordem_pergunta,
+
+                'obrigatoria': obrigatoria,
+
+                'formulario': {
+                    'connect': {
+                        'id': formulario_id
+                    }
+                }
+
+            }
+        )
+
+
+        # =================================================
+        # OPÇÕES
+        # =================================================
+
+        opcoes = dados_pergunta.get(
+            'opcoes',
+            []
+        )
+
+
+        ordem_opcao = 1
+
+
+        for dados_opcao in opcoes:
+
+            texto_opcao = str(
+                dados_opcao.get(
+                    'texto',
+                    ''
+                )
+            ).strip()
+
+
+            if not texto_opcao:
+                continue
+
+
+            try:
+
+                pontos = int(
+                    dados_opcao.get(
+                        'pontos',
+                        0
+                    )
+                )
+
+            except (
+                ValueError,
+                TypeError
+            ):
+
+                pontos = 0
+
+
+            db.opcao.create(
+                data={
+
+                    'texto': texto_opcao,
+
+                    'pontos': pontos,
+
+                    'ordem': ordem_opcao,
+
+                    'pergunta': {
+                        'connect': {
+                            'id': pergunta.id
+                        }
+                    }
+
+                }
+            )
+
+
+            ordem_opcao += 1
+
+
+        ordem_pergunta += 1
+
+
+    # =====================================================
+    # VOLTA PARA A PÁGINA
+    # =====================================================
+
+    return redirect(
+        url_for(
+            'edit_rh_page',
+            vaga=formulario_id
+        )
+    )
+
+
+@app.route('/formulario/<int:formulario_id>/alternar', methods=['POST'])
+def alternar_formulario(formulario_id):
+    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+        return redirect(url_for('login'))
+
+    formulario = db.formulario.find_unique(
+        where={'id': formulario_id}
+    )
+
+    if formulario:
+        db.formulario.update(
+            where={'id': formulario_id},
+            data={
+                'ativo': not formulario.ativo
+            }
+        )
+
+    return redirect(url_for('edit_rh_page'))
+
+@app.route('/formulario/<int:formulario_id>', methods=['POST'])
+def responder_formulario(formulario_id):
+
+    formulario = db.formulario.find_unique(
+        where={'id': formulario_id},
+        include={
+            'perguntas': {
+                'include': {
+                    'opcoes': True
+                },
+                'order_by': {
+                    'ordem': 'asc'
+                }
+            }
+        }
+    )
+
+    # Verifica se a vaga existe e está ativa
+    if not formulario or not formulario.ativo:
+        return redirect(url_for('homepage'))
+
+    # ============================
+    # DADOS DO CANDIDATO
+    # ============================
+
+    nome = request.form.get('nome', '').strip()
+    email = request.form.get('email', '').strip()
+    telefone = request.form.get('telefone', '').strip()
+    endereco = request.form.get('endereco', '').strip()
+    linkedin = request.form.get('linkedin', '').strip()
+
+    # ============================
+    # VALIDAÇÕES BÁSICAS
+    # ============================
+
+    if not nome or not email or not telefone or not endereco:
+        return redirect(url_for('homepage'))
+
+    # ============================
+    # CRIA O CANDIDATO
+    # ============================
+
+    candidato = db.candidato.create(
+        data={
+            'nome': nome,
+            'email': email,
+            'telefone': telefone,
+            'endereco': endereco,
+            'linkedin': linkedin,
+            'formulario': {
+                'connect': {
+                    'id': formulario_id
+                }
+            }
+        }
+    )
+
+    # ============================
+    # SALVA AS RESPOSTAS
+    # ============================
+
+    for pergunta in formulario.perguntas:
+
+        resposta = request.form.get(
+            f'pergunta_{pergunta.id}'
+        )
+
+        if not resposta:
+            continue
+
+        # Procura a opção escolhida
+        opcao_escolhida = None
+
+        for opcao in pergunta.opcoes:
+
+            if opcao.texto == resposta:
+                opcao_escolhida = opcao
+                break
+
+        if not opcao_escolhida:
+            continue
+
+        db.resposta.create(
+            data={
+                'candidato': {
+                    'connect': {
+                        'id': candidato.id
+                    }
+                },
+                'pergunta': {
+                    'connect': {
+                        'id': pergunta.id
+                    }
+                },
+                'opcao': {
+                    'connect': {
+                        'id': opcao_escolhida.id
+                    }
+                }
+            }
+        )
+
+    # ============================
+    # FINALIZA
+    # ============================
+
+    return render_template(
+        'CandidaturaEnviada.html',
+        formulario=formulario,
+        candidato=candidato
+    )
 
 @app.route('/logout')
 def logout():

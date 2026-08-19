@@ -1,16 +1,56 @@
-/* ==========================
-   VARIÁVEIS E CONFIGURAÇÕES GERAIS
-========================== */
+/* =========================================================
+   METROFORM — FORMULÁRIOS
+   CSS PRINCIPAL
+========================================================= */
+
+
+/* =========================================================
+   1. VARIÁVEIS
+========================================================= */
+
 :root {
-    --azul: #1d4ed8;
-    --azul-hover: #1e40af;
+
+    --azul: #7A1C1C;
+    --azul-hover: #5e1414;
+
+    --azul-escuro: #F5F5F5;;
+    --azul-escuro-hover: #234f82;
+
+    --branco: #ffffff;
+
+    --fundo-claro: #f8fafc;
+    --fundo-cinza: #f1f5f9;
+
     --borda: #e2e8f0;
+    --borda-input: #cbd5e1;
+
+    --texto: #1e293b;
     --texto-claro: #64748b;
-    --vermelho: #fd0000;
+
+    --vermelho: #ef4444;
     --vermelho-hover: #dc2626;
-    --cor-fonte: #1e293b;
-    --bg-escuro: #17375E;
+
+    --verde: #10b981;
+    --verde-bg: #dcfce7;
+
+    --sombra-card:
+        0 8px 25px rgba(0, 0, 0, 0.12);
+
+    --sombra-modal:
+        0 25px 60px rgba(0, 0, 0, 0.30);
+
+    --vermelho: #C8102E;
+    --vermelho-escuro: #A50D25;
+    --vermelho-claro: #E85A6D;
+
+    --cinza: #F5F5F5;
+    --branco: #FFFFFF;
 }
+
+
+/* =========================================================
+   2. RESET
+========================================================= */
 
 * {
     box-sizing: border-box;
@@ -18,364 +58,1430 @@
     padding: 0;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    font-family: 'Poppins', 'Segoe UI', sans-serif;
-    background-color: var(--bg-escuro);
-    color: var(--cor-fonte);
+
+    font-family:
+        'Poppins',
+        'Segoe UI',
+        sans-serif;
+
+    background-color: var(--azul-escuro);
+
+    color: var(--texto);
+
     line-height: 1.6;
 }
 
+body.modal-aberto {
+    overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}
+
+
+/* =========================================================
+   3. CONTAINER
+========================================================= */
+
 .container {
+
     width: 100%;
-    max-width: 1000px;
+
+    max-width: 1100px;
+
     margin: 0 auto;
+
     padding: 0 20px;
 }
 
-/* ==========================
-   HEADER E BANNER
-========================== */
-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid var(--borda);
-    padding: 18px 0;
+
+/* =========================================================
+   MENU INTERNO — RH
+   ========================================================= */
+
+.site-header {
+    background-color: var(--azul);
+    padding: 16px 40px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.menu-interno {
+    max-width: 1200px;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .logo h1 {
-    font-size: 1.5rem;
-    color: var(--azul);
-    font-weight: 700;
-}
-
-.banner {
-    background-color: #ffffff;
-    border-bottom: 1px solid var(--borda);
-    padding: 30px 0;
-    margin-bottom: 30px;
-}
-
-.banner h2 {
-    font-size: 1.8rem;
-    margin-bottom: 8px;
-    color: #0f172a;
-}
-
-.banner p {
-    color: var(--texto-claro);
-    font-size: 1rem;
-}
-
-/* ==========================
-   FORMULÁRIO DE REGRAS
-========================== */
-.nota-corte {
-    background: white;
-    border: 1px solid var(--borda);
-    border-left: 6px solid var(--azul);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.nota-corte-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nota-corte label {
-    font-weight: 600;
-    color: var(--azul);
-    white-space: nowrap;
-}
-
-.campo-numero {
-    width: 100px;
-}
-
-.nota-corte-info {
-    font-size: 13px;
-    color: #666;
-}
-
-/* Inputs e Selects Gerais */
-input, select {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 15px;
-    transition: .25s;
-    font-family: inherit;
-    background-color: #fff;
-}
-
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--azul);
-    box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.15);
-}
-
-/* Card da pergunta */
-.bloco-pergunta {
-    background: white;
-    border: 1px solid var(--borda);
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 20px rgba(0,0,0,.05);
-}
-
-.pergunta-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    gap: 10px;
-}
-
-.pergunta-header h4 {
-    color: var(--azul);
-    font-size: 1.1rem;
     margin: 0;
+    color: var(--branco);
+    font-size: 1.7rem;
+    font-weight: 600;
 }
 
-.rotulo-campo {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 6px;
-    font-size: 14px;
-}
-
-.campo-texto-pergunta,
-.selecionar-tipo-ponto {
-    margin-bottom: 15px;
-}
-
-/* Respostas Dinâmicas */
-.bloco-resposta {
+.menu-acoes {
     display: flex;
-    gap: 12px;
     align-items: center;
-    background: #f8fafc;
-    border: 1px solid var(--borda);
-    border-radius: 10px;
-    padding: 12px;
-    margin-top: 12px;
-}
-
-.campo-resposta-texto {
-    flex: 2;
-}
-
-.grupo-pontos {
-    display: flex;
     gap: 10px;
-    align-items: center;
 }
 
-.ponto-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ponto-item span {
-    font-size: 13px;
-    white-space: nowrap;
-    font-weight: 600;
-    color: var(--texto-claro);
-}
-
-.campo-ponto-num {
-    width: 65px;
-    text-align: center;
-    padding: 8px;
-}
-
-/* Botões */
-.btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    color: white;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: .2s;
-    font-family: inherit;
+.btn-menu {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
+    padding: 9px 18px;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    transition: 0.2s ease;
+}
+
+
+/* Voltar */
+
+.btn-voltar-menu {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-voltar-menu:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+    color: white;
+}
+
+
+/* Sair */
+
+.btn-sair {
+    background-color: white;
+    color: var(--vermelho);
+}
+
+.btn-sair:hover {
+    background-color: #f5f5f5;
+    color: var(--vermelho-escuro);
+}
+
+/* =========================================================
+   5. BANNER
+========================================================= */
+
+.banner {
+
+    background-color: var(--azul);
+    border-top: 1px solid var(--borda);
+    border-bottom:
+        1px solid var(--borda);
+
+    padding: 35px 0;
+    margin-bottom: 35px;
+}
+
+.banner h2 {
+
+    font-size: 1.8rem;
+
+    margin-bottom: 8px;
+
+    color: var(--branco);
+}
+
+.banner p {
+
+    color: var(--cinza);
+
+    font-size: 1rem;
+}
+
+
+/* =========================================================
+   6. TOPO DAS SEÇÕES
+========================================================= */
+
+.topo-pagina {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.topo-pagina h2 {
+
+    color: var(--azul);
+
+    font-size: 1.6rem;
+
+    margin-bottom: 5px;
+}
+
+.topo-pagina p {
+
+    color: var(--vermelho-escuro);
+}
+
+
+/* =========================================================
+   7. DADOS GERAIS
+========================================================= */
+
+.dados-gerais {
+
+    background-color: var(--branco);
+
+    border-radius: 15px;
+
+    padding: 30px;
+
+    margin-bottom: 45px;
+
+    box-shadow: var(--sombra-card);
+}
+
+.dados-gerais-topo h2 {
+
+    color: var(--texto);
+}
+
+.dados-gerais-topo p {
+
+    color: var(--texto-claro);
+}
+
+.lista-dados-gerais {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 12px;
+}
+
+.item-dado {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 15px 18px;
+
+    background-color: var(--fundo-claro);
+
+    border:
+        1px solid var(--borda);
+
+    border-radius: 10px;
+}
+
+.item-dado strong {
+
+    color: var(--texto);
+}
+
+.item-dado span {
+
+    font-size: 0.8rem;
+
+    color: var(--texto-claro);
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   8. LISTA DE VAGAS
+========================================================= */
+
+.lista-formularios {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 22px;
+
+    padding-bottom: 60px;
+}
+
+
+/* =========================================================
+   9. CARD DA VAGA
+========================================================= */
+
+.card-formulario {
+
+    background-color: var(--branco);
+
+    border:
+        1px solid var(--borda);
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    box-shadow: var(--sombra-card);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card-formulario:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+
+/* =========================================================
+   10. CONTEÚDO DA VAGA
+========================================================= */
+
+.card-conteudo {
+
+    padding:
+        25px 28px 18px;
+}
+
+.card-conteudo h3 {
+
+    color: var(--azul);
+
+    font-size: 1.35rem;
+
+    margin-bottom: 8px;
+}
+
+.card-conteudo p {
+
+    color: var(--texto-claro);
+
+    margin-bottom: 18px;
+}
+
+
+/* =========================================================
+   11. INFORMAÇÕES DA VAGA
+========================================================= */
+
+.informacoes-vaga {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+.informacoes-vaga > span {
+
+    background-color: var(--fundo-cinza);
+
+    color: var(--texto-claro);
+
+    border-radius: 20px;
+
+    padding: 5px 12px;
+
+    font-size: 0.78rem;
+
+    font-weight: 600;
+}
+
+.status.ativo {
+
+    background-color: var(--verde-bg);
+
+    color: #15803d;
+}
+
+.status.inativo {
+
+    background-color: #fee2e2;
+
+    color: #b91c1c;
+}
+
+
+/* =========================================================
+   12. AÇÕES DA VAGA
+========================================================= */
+
+.card-acoes {
+
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    padding:
+        0 28px 22px;
+}
+
+.card-acoes form,
+.acoes-pergunta form {
+
+    margin: 0;
+}
+
+
+/* =========================================================
+   13. BOTÕES
+========================================================= */
+
+.btn {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
     gap: 8px;
+
+    padding: 10px 17px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background-color: #64748b;
+
+    color: var(--branco);
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    font-size: 0.88rem;
+
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .btn:hover {
+
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+
+    box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn:active {
+
     transform: translateY(0);
 }
 
+
+/* PRIMÁRIO */
+
 .btn-primario {
-    background: var(--azul);
+
+    background-color: var(--azul);
+
+    color: var(--branco);
 }
 
 .btn-primario:hover {
-    background: var(--azul-hover);
+
+    background-color: var(--azul-hover);
 }
 
-.btn-sucesso {
-    background: #10b981;
-}
 
-.btn-sucesso:hover {
-    background: #059669;
-}
+/* SECUNDÁRIO */
 
+.btn-secundario,
 .btn-voltar {
-    background: #64748b;
+
+    background-color: #64748b;
+
+    color: var(--branco);
 }
 
+.btn-secundario:hover,
 .btn-voltar:hover {
-    background: #475569;
+
+    background-color: #475569;
 }
 
-.btn-remover {
-    background: var(--vermelho);
-    color: white;
+
+/* PERIGO */
+
+.btn-perigo {
+
+    background-color: var(--vermelho);
+
+    color: var(--branco);
+}
+
+.btn-perigo:hover {
+
+    background-color: var(--vermelho-hover);
+}
+
+
+/* =========================================================
+   14. GERENCIAMENTO DAS PERGUNTAS
+========================================================= */
+
+.gerenciar-perguntas {
+
+    border-top:
+        1px solid var(--borda);
+
+    background-color: var(--fundo-claro);
+}
+
+
+/* =========================================================
+   15. BOTÃO PERGUNTAS
+========================================================= */
+
+.btn-perguntas {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
     border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
+
+    background: transparent;
+
+    padding: 17px 28px;
+
+    color: var(--azul);
+
+    font-family: inherit;
+
+    font-size: 0.95rem;
+
+    font-weight: 700;
+
     cursor: pointer;
-    transition: .2s;
-    font-size: .85rem;
-    white-space: nowrap;
+
+    transition:
+        background-color 0.2s ease;
 }
 
-.btn-remover:hover {
-    background: var(--vermelho-hover);
+.btn-perguntas:hover {
+
+    background-color: #eef2f7;
 }
+
+
+/* =========================================================
+   16. SETA
+========================================================= */
+
+.seta {
+
+    font-size: 0.8rem;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.btn-perguntas.aberto .seta {
+
+    transform: rotate(180deg);
+}
+
+
+/* =========================================================
+   17. LISTA DE PERGUNTAS
+========================================================= */
+
+.lista-perguntas {
+
+    display: none;
+
+    padding:
+        0 28px 25px;
+}
+
+.lista-perguntas.aberto {
+
+    display: block;
+}
+
+
+/* =========================================================
+   18. PERGUNTA
+========================================================= */
+
+.item-pergunta {
+
+    background-color: var(--branco);
+
+    border:
+        1px solid var(--borda);
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    margin-top: 12px;
+
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+
+/* =========================================================
+   19. CABEÇALHO DA PERGUNTA
+========================================================= */
+
+.pergunta-cabecalho {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+.pergunta-titulo {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    flex: 1;
+}
+
+.pergunta-titulo strong {
+
+    padding-top: 3px;
+
+    color: var(--texto);
+
+    font-size: 0.95rem;
+}
+
+
+/* =========================================================
+   20. NÚMERO DA PERGUNTA
+========================================================= */
+
+.numero-pergunta {
+
+    width: 34px;
+
+    height: 34px;
+
+    min-width: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background-color: var(--azul);
+
+    color: var(--branco);
+
+    border-radius: 50%;
+
+    font-size: 0.85rem;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   21. BADGES
+========================================================= */
+
+.badge-obrigatoria,
+.badge-opcional {
+
+    display: inline-block;
+
+    white-space: nowrap;
+
+    padding:
+        4px 9px;
+
+    border-radius: 20px;
+
+    font-size: 0.75rem;
+
+    font-weight: 600;
+}
+
+.badge-obrigatoria {
+
+    background-color: #dbeafe;
+
+    color: #1d4ed8;
+}
+
+.badge-opcional {
+
+    background-color: #f1f5f9;
+
+    color: #64748b;
+}
+
+
+/* =========================================================
+   22. RESUMO DAS OPÇÕES
+========================================================= */
+
+.opcoes-resumo {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin:
+        15px 0 5px;
+
+    padding-left: 46px;
+}
+
+.opcao-resumo {
+
+    background-color: var(--fundo-claro);
+
+    border:
+        1px solid var(--borda);
+
+    border-radius: 7px;
+
+    padding:
+        7px 10px;
+
+    font-size: 0.8rem;
+
+    color: var(--texto);
+}
+
+.opcao-resumo small {
+
+    color: var(--azul);
+
+    font-weight: 700;
+
+    margin-left: 4px;
+}
+
+.sem-opcoes {
+
+    color: var(--texto-claro);
+
+    font-size: 0.85rem;
+
+    margin:
+        15px 0 5px;
+
+    padding-left: 46px;
+}
+
+
+/* =========================================================
+   23. AÇÕES DA PERGUNTA
+========================================================= */
+
+.acoes-pergunta {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+
+/* =========================================================
+   24. BOTÃO NOVA PERGUNTA
+========================================================= */
+
+.btn-nova-pergunta {
+
+    margin-top: 15px;
+
+    background-color: var(--azul);
+
+    color: var(--branco);
+}
+
+.btn-nova-pergunta:hover {
+
+    background-color: var(--azul-escuro-hover);
+}
+
+
+/* =========================================================
+   25. SEM PERGUNTAS
+========================================================= */
+
+.sem-perguntas {
+
+    text-align: center;
+
+    background-color: var(--branco);
+
+    border:
+        1px dashed var(--borda-input);
+
+    border-radius: 12px;
+
+    padding: 30px;
+
+    margin-top: 12px;
+}
+
+.sem-perguntas p {
+
+    color: var(--texto-claro);
+}
+
+
+/* =========================================================
+   26. SEM VAGAS
+========================================================= */
+
+.sem-formularios {
+
+    background-color: var(--branco);
+
+    padding: 50px 30px;
+
+    margin-bottom: 60px;
+
+    border-radius: 15px;
+
+    text-align: center;
+}
+
+.sem-formularios h3 {
+
+    color: var(--azul);
+
+    margin-bottom: 8px;
+}
+
+.sem-formularios p {
+
+    color: var(--texto-claro);
+
+    margin-bottom: 25px;
+}
+
+
+/* =========================================================
+   27. MODAL
+========================================================= */
+
+.modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(15, 23, 42, 0.72);
+
+    backdrop-filter:
+        blur(4px);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+
+    z-index: 9999;
+}
+
+.modal-overlay.ativo {
+
+    opacity: 1;
+
+    visibility: visible;
+}
+
+
+/* =========================================================
+   28. CONTEÚDO DO MODAL
+========================================================= */
+
+.modal {
+
+    width: 100%;
+
+    max-width: 680px;
+
+    max-height: 90vh;
+
+    background-color: var(--branco);
+
+    border-radius: 18px;
+
+    box-shadow:
+        var(--sombra-modal);
+
+    overflow-y: auto;
+
+    transform:
+        translateY(15px) scale(0.98);
+
+    transition:
+        transform 0.2s ease;
+}
+
+.modal-overlay.ativo .modal {
+
+    transform:
+        translateY(0) scale(1);
+}
+
+
+/* =========================================================
+   29. CABEÇALHO DO MODAL
+========================================================= */
+
+.modal-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding:
+        26px 30px;
+
+    border-bottom:
+        1px solid var(--borda);
+}
+
+.modal-header h2 {
+
+    margin-bottom: 5px;
+
+    color: var(--azul);
+
+    font-size: 1.4rem;
+
+    font-weight: 700;
+}
+
+.modal-header p {
+
+    color: var(--texto-claro);
+
+    font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   30. FECHAR MODAL
+========================================================= */
+
+.modal-fechar {
+
+    width: 36px;
+
+    height: 36px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background-color: var(--fundo-cinza);
+
+    color: var(--texto-claro);
+
+    font-size: 1.4rem;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.modal-fechar:hover {
+
+    background-color: #fee2e2;
+
+    color: var(--vermelho-hover);
+}
+
+
+/* =========================================================
+   31. FORMULÁRIO DO MODAL
+========================================================= */
+
+.modal form {
+
+    padding:
+        28px 30px 30px;
+}
+
+.modal .campo {
+
+    margin-bottom: 22px;
+}
+
+.modal .campo label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--texto);
+
+    font-size: 0.88rem;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   32. INPUTS
+========================================================= */
+
+.modal input[type="text"],
+.modal input[type="number"],
+.modal select,
+.modal textarea {
+
+    width: 100%;
+
+    padding:
+        11px 13px;
+
+    border:
+        1px solid var(--borda-input);
+
+    border-radius: 9px;
+
+    background-color: var(--branco);
+
+    color: var(--texto);
+
+    font-family: inherit;
+
+    font-size: 0.88rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+
+    border-color: var(--azul);
+
+    box-shadow:
+        0 0 0 4px rgba(29, 78, 216, 0.10);
+}
+
+.modal textarea {
+
+    min-height: 110px;
+
+    resize: vertical;
+}
+
+
+/* =========================================================
+   33. CHECKBOX
+========================================================= */
+
+.checkbox-campo {
+
+    margin:
+        5px 0 28px;
+}
+
+.checkbox-campo label {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    color: var(--texto);
+
+    font-size: 0.88rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.checkbox-campo input {
+
+    width: 16px;
+
+    height: 16px;
+
+    accent-color: var(--azul);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   34. ÁREA DE OPÇÕES
+========================================================= */
+
+.opcoes-modal {
+
+    padding-top: 22px;
+
+    border-top:
+        1px solid var(--borda);
+}
+
+.opcoes-modal-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 15px;
+}
+
+.opcoes-modal-header h3 {
+
+    margin-bottom: 3px;
+
+    color: var(--azul);
+
+    font-size: 1rem;
+}
+
+.opcoes-modal-header p {
+
+    color: var(--texto-claro);
+
+    font-size: 0.78rem;
+}
+
+
+/* =========================================================
+   35. LISTA DE OPÇÕES DO MODAL
+========================================================= */
+
+.lista-opcoes-modal {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   36. OPÇÃO
+========================================================= */
+
+.opcao-modal {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 90px 38px;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 10px;
+
+    background-color: var(--fundo-claro);
+
+    border:
+        1px solid var(--borda);
+
+    border-radius: 10px;
+}
+
+.opcao-modal input {
+
+    margin: 0;
+}
+
+.opcao-modal input[type="number"] {
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   37. REMOVER OPÇÃO
+========================================================= */
 
 .btn-remover-opcao {
-    background: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
+
+    width: 36px;
+
+    height: 36px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background-color: #fee2e2;
+
+    color: var(--vermelho-hover);
+
+    font-size: 1.1rem;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease;
 }
 
 .btn-remover-opcao:hover {
-    background: #dc2626;
+
+    background-color: #fecaca;
 }
 
-.btn-add-opcao {
-    margin-top: 10px;
-    background: #17375E;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: 0.2s;
-}
 
-.btn-add-opcao:hover {
-    background: #234f82;
-}
+/* =========================================================
+   38. AÇÕES DO MODAL
+========================================================= */
 
-/* Área dos botões de rodapé */
-.acoes {
+.modal-acoes {
+
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+
     justify-content: flex-end;
-    margin-top: 30px;
-    margin-bottom: 50px;
+
+    gap: 10px;
+
+    margin-top: 28px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid var(--borda);
 }
 
-.acoes .btn {
-    flex-grow: 1;
-    max-width: 300px;
+
+/* =========================================================
+   39. CAMPOS LADO A LADO
+========================================================= */
+
+.linha-campos {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 15px;
 }
 
-/* ==========================
-   MEDIA QUERIES (RESPONSIVIDADE)
-========================== */
-@media (max-width: 768px) {
-    .banner {
-        padding: 20px 0;
-    }
-    
-    .banner h2 {
-        font-size: 1.5rem;
+
+/* =========================================================
+   40. RESPONSIVIDADE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .lista-dados-gerais {
+
+        grid-template-columns: 1fr;
     }
 
-    .nota-corte {
+    .linha-campos {
+
+        grid-template-columns: 1fr;
+    }
+
+    .pergunta-cabecalho {
+
         flex-direction: column;
+    }
+
+    .opcoes-resumo,
+    .sem-opcoes {
+
+        padding-left: 0;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .container {
+
+        padding:
+            0 15px;
+    }
+
+    .topo-pagina {
+
         align-items: flex-start;
-        gap: 10px;
-    }
 
-    .nota-corte-input-group {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .bloco-resposta {
         flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        position: relative;
-        padding-right: 40px; /* Dá espaço para o botão "X" absoluto */
     }
 
-    .campo-resposta-texto {
+    .card-acoes {
+
+        padding:
+            0 20px 20px;
+    }
+
+    .btn-perguntas {
+
+        padding:
+            17px 20px;
+    }
+
+    .lista-perguntas {
+
+        padding:
+            0 20px 20px;
+    }
+
+    .modal-overlay {
+
+        padding: 10px;
+    }
+
+    .modal {
+
+        max-height: 95vh;
+
+        border-radius: 14px;
+    }
+
+    .modal-header {
+
+        padding: 20px;
+    }
+
+    .modal form {
+
+        padding:
+            22px 20px;
+    }
+
+    .opcoes-modal-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .opcoes-modal-header .btn {
+
         width: 100%;
     }
 
-    .grupo-pontos {
-        width: 100%;
-        justify-content: space-between;
+    .opcao-modal {
+
+        grid-template-columns:
+            1fr 70px 36px;
     }
 
-    .ponto-item {
-        flex: 1;
+    .modal-acoes {
+
+        flex-direction: column-reverse;
     }
 
-    .campo-ponto-num {
-        width: 100%; /* Ocupa o espaço disponível do item */
-    }
+    .modal-acoes .btn {
 
-    .btn-remover-opcao {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-    }
-
-    .acoes {
-        flex-direction: column-reverse; /* Coloca o botão "Voltar" por último no mobile */
-        gap: 10px;
-    }
-
-    .acoes .btn {
-        max-width: 100%;
         width: 100%;
     }
+
 }

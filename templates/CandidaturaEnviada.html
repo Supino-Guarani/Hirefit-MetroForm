@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidatura enviada - MetroForm</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Envio.css') }}">
+</head>
+
+<body>
+    <main>
+        <h1>Candidatura enviada!</h1>
+        <p>
+            Obrigado por se candidatar à vaga
+            <strong>{{ formulario.titulo }}</strong>.
+        </p>
+        <p>
+            Seus dados foram recebidos com sucesso.
+        </p>
+        <a href="{{ url_for('homepage') }}">
+            Voltar para as oportunidades
+        </a>
+    </main>
+</body>
+</html>

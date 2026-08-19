@@ -20,6 +20,7 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
 
@@ -57,8 +58,6 @@
                     oportunidades ideais para seu perfil.
                 </p>
 
-                <a href="https://tally.so/r/OD90N7">Formulário de contratação</a> <!--vai ter um futuro link-->
-
             </div>
 
             <div class="hero-imagem"> <!-- guarda imagens -->
@@ -81,43 +80,303 @@
 
         </section>
 
-        <!-- OPORTUNIDADES -->
+        <!-- =====================================================
+     OPORTUNIDADES
+====================================================== -->
 
         <section class="oportunidades">
 
             <h2>Nossas oportunidades</h2>
 
+
+            <!-- =================================================
+         CARDS DAS VAGAS
+    ================================================== -->
+
+            {% if formularios %}
+
             <div class="cards">
 
-                <div class="card">
-
-                    <h3>💼 VAGA Administrativo </h3>
-
-                    <p>
-                        Organização de documentos, atendimento interno
-                        e apoio às atividades administrativas.
-                    </p>
-
-
-
-                </div>
+                {% for formulario in formularios %}
 
                 <div class="card">
 
-                    <h3>🏭 VAGA Operacional </h3>
+                    <h3>
+                        {{ formulario.titulo }}
+                    </h3>
+
+
+                    {% if formulario.descricao %}
 
                     <p>
-                        Apoio na linha de produção,
-                        organização do setor e controle de materiais.
+                        {{ formulario.descricao }}
                     </p>
 
+                    {% endif %}
 
+
+                    {% if formulario.categoria %}
+
+                    <span>
+                        {{ formulario.categoria }}
+                    </span>
+
+                    {% endif %}
+
+
+                    <button type="button" class="btn-candidatar" data-bs-toggle="modal"
+                        data-bs-target="#modalFormulario{{ formulario.id }}">
+
+                        Candidatar-se
+
+                    </button>
 
                 </div>
 
-
+                {% endfor %}
 
             </div>
+
+
+            {% else %}
+
+            <!-- =================================================
+         NENHUMA VAGA
+    ================================================== -->
+
+            <div class="card">
+
+                <h3>
+                    Nenhuma vaga disponível
+                </h3>
+
+                <p>
+                    No momento não temos oportunidades abertas.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+
+            <!-- =================================================
+         MODAIS DAS VAGAS
+    ================================================== -->
+
+            {% if formularios %}
+
+            {% for formulario in formularios %}
+
+            <div class="modal fade" id="modalFormulario{{ formulario.id }}" tabindex="-1" aria-hidden="true">
+
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+                    <div class="modal-content">
+
+
+                        <!-- CABEÇALHO -->
+
+                        <div class="modal-header">
+
+                            <div>
+
+                                <h2>
+                                    {{ formulario.titulo }}
+                                </h2>
+
+                                {% if formulario.categoria %}
+
+                                <span>
+                                    {{ formulario.categoria }}
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar">
+
+                            </button>
+
+                        </div>
+
+
+
+                        <!-- CORPO -->
+
+                        <div class="modal-body">
+
+
+                            {% if formulario.descricao %}
+
+                            <p>
+                                {{ formulario.descricao }}
+                            </p>
+
+                            {% endif %}
+
+
+                            <hr>
+
+
+                            {% if formulario.perguntas %}
+
+                            <form method="POST" action="{{ url_for(
+                            'responder_formulario',
+                            formulario_id=formulario.id
+                        ) }}">
+
+
+                                <!-- DADOS DO CANDIDATO -->
+
+                                <div class="dados-candidato">
+
+                                    <h3>
+                                        Seus dados
+                                    </h3>
+
+
+                                    <div class="campo-formulario">
+
+                                        <label for="nome_{{ formulario.id }}">
+                                            Nome completo
+                                        </label>
+
+                                        <input type="text" id="nome_{{ formulario.id }}" name="nome" required
+                                            placeholder="Digite seu nome completo">
+
+                                    </div>
+
+
+                                    <div class="campo-formulario">
+
+                                        <label for="email_{{ formulario.id }}">
+                                            E-mail
+                                        </label>
+
+                                        <input type="email" id="email_{{ formulario.id }}" name="email" required
+                                            placeholder="seuemail@email.com">
+
+                                    </div>
+
+
+                                    <div class="campo-formulario">
+
+                                        <label for="telefone_{{ formulario.id }}">
+                                            Telefone
+                                        </label>
+
+                                        <input type="tel" id="telefone_{{ formulario.id }}" name="telefone" required
+                                            placeholder="(11) 99999-9999">
+
+                                    </div>
+
+
+                                    <div class="campo-formulario">
+
+                                        <label for="endereco_{{ formulario.id }}">
+                                            Endereço
+                                        </label>
+
+                                        <input type="text" id="endereco_{{ formulario.id }}" name="endereco" required
+                                            placeholder="Rua, número, bairro, cidade">
+
+                                    </div>
+
+
+                                    <div class="campo-formulario">
+
+                                        <label for="linkedin_{{ formulario.id }}">
+                                            LinkedIn
+                                        </label>
+
+                                        <input type="url" id="linkedin_{{ formulario.id }}" name="linkedin"
+                                            placeholder="https://www.linkedin.com/in/seu-perfil">
+
+                                    </div>
+
+                                </div>
+
+
+                                <hr>
+
+
+                                <!-- PERGUNTAS -->
+
+                                <div class="perguntas-vaga">
+
+                                    <h3>
+                                        Perguntas da vaga
+                                    </h3>
+
+
+                                    {% for pergunta in formulario.perguntas %}
+
+                                    <div class="pergunta">
+
+                                        <h4>
+
+                                            {{ loop.index }}.
+                                            {{ pergunta.texto }}
+
+                                            {% if pergunta.obrigatoria %}
+
+                                            <span>*</span>
+
+                                            {% endif %}
+
+                                        </h4>
+
+
+                                        {% for opcao in pergunta.opcoes %}
+
+                                        <label>
+
+                                            <input type="radio" name="pergunta_{{ pergunta.id }}"
+                                                value="{{ opcao.texto }}" {% if pergunta.obrigatoria %} required {%
+                                                endif %}>
+
+                                            {{ opcao.texto }}
+
+                                        </label>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                    {% endfor %}
+
+
+                                    <button type="submit">
+                                        Enviar candidatura
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+
+                            {% else %}
+
+                            <p>
+                                Esta vaga ainda não possui perguntas cadastradas.
+                            </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+            {% endif %}
 
         </section>
 
@@ -188,7 +447,7 @@
         <p> © 2026 - Todos os direitos reservados. </p>
 
     </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

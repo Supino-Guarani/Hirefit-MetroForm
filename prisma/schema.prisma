@@ -17,67 +17,78 @@ model Usuario {
   role  String @default("rh")
 }
 
+model Categoria {
+  id          Int          @id @default(autoincrement())
+  nome        String       @unique
+  formularios Formulario[]
+}
+
 model Formulario {
   id           Int      @id @default(autoincrement())
   titulo       String
   descricao    String?
-  categoria    String
+  categoria    String   @default("Geral")
   notaCorte    Int      @default(0)
   ativo        Boolean  @default(true)
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
+
+  categoriaId  Int?
+  categoriaRel Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
 
   perguntas   Pergunta[]
   candidatos  Candidato[]
 }
 
 model Pergunta {
-  id           Int        @id @default(autoincrement())
-  texto        String
-  ordem        Int
-  obrigatoria  Boolean    @default(true)
+  id          Int     @id @default(autoincrement())
+  texto       String
+  ordem       Int
+  obrigatoria Boolean @default(true)
 
   formularioId Int
   formulario   Formulario @relation(fields: [formularioId], references: [id], onDelete: Cascade)
 
-  opcoes       Opcao[]
-  respostas    Resposta[]
+  opcoes    Opcao[]
+  respostas Resposta[]
 }
 
 model Opcao {
-  id          Int      @id @default(autoincrement())
-  texto       String
-  pontos      Int      @default(0)
-  ordem       Int
+  id     Int    @id @default(autoincrement())
+  texto  String
+  pontos Int    @default(0)
+  ordem  Int
 
-  perguntaId  Int
-  pergunta    Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+  perguntaId Int
+  pergunta   Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
 
-  respostas   Resposta[]
+  respostas Resposta[]
 }
 
 model Candidato {
-  id           Int      @id @default(autoincrement())
-  nome         String
-  email        String
-  telefone     String?
-  criadoEm     DateTime @default(now())
+  id       Int      @id @default(autoincrement())
+  nome     String
+  email    String
+  telefone String?
+  endereco String?
+  linkedin String?
+  criadoEm DateTime @default(now())
 
   formularioId Int
   formulario   Formulario @relation(fields: [formularioId], references: [id], onDelete: Cascade)
 
-  respostas    Resposta[]
+  respostas Resposta[]
 }
 
 model Resposta {
-  id          Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   candidatoId Int
   candidato   Candidato @relation(fields: [candidatoId], references: [id], onDelete: Cascade)
 
-  perguntaId  Int
-  pergunta    Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+  perguntaId Int
+  pergunta   Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
 
-  opcaoId     Int
-  opcao       Opcao @relation(fields: [opcaoId], references: [id], onDelete: Cascade)
+  opcaoId Int
+  opcao   Opcao @relation(fields: [opcaoId], references: [id], onDelete: Cascade)
 }

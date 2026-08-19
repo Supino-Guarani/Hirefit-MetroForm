@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Painel do RH - MetroForm</title>
-    <script src="{{url_for('static',filename='js/homeRH.js')}}"></script>
+    <script src="{{url_for('static',filename='js/homeRH.js')}}" defer></script>
     <!--Fonte do Google-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='homeRH.css') }}">
 
 
-    
+
 </head>
 
 <body>
@@ -56,77 +56,271 @@
     <!--Tabela-->
     <main class="container">
         <section class="painel">
-            <h2>Candidatos recentes</h2>
 
-            <div class="tabela">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Celular</th>
-                            <th>Perfil</th>
-                            <th>Pontuação</th>
-                            <th>LinkedIn / Currículo</th>
-                            <th>Ações</th> <!-- Adicionada coluna de Ações -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for candidato in candidatos %}
-                        <tr>
-                            <td>{{ candidato['Nome'] }}</td>
-                            <td>{{ candidato['Celular'] }}</td>
-                            <td>
-                                {% if candidato['perfil_calculado'] == 'Apto para Ambos' %}
-                                <span class="perfil ambos">🌟 Ambos</span>
-                                {% elif candidato['perfil_calculado'] == 'Administrativo' %}
-                                <span class="perfil administrativo">💼 Administrativo</span>
-                                {% elif candidato['perfil_calculado'] == 'Operacional' %}
-                                <span class="perfil operacional">🔧 Operacional</span>
-                                {% else %}
-                                <span class="perfil nenhum">❌ Nenhum</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <strong>{{ candidato['pontos_ordenacao'] }} pts</strong>
-                                <br>
-                                <small class="descricao">
-                                    {% if candidato['perfil_calculado'] == 'Administrativo' %}
-                                    Foco Administrativo
-                                    {% elif candidato['perfil_calculado'] == 'Operacional' %}
-                                    Foco Operacional
-                                    {% elif candidato['perfil_calculado'] == 'Apto para Ambos' %}
-                                    Compatível com ambas as áreas
-                                    {% else %}
-                                    Sem perfil definido
-                                    {% endif %}
-                                </small>
-                            </td>
-                            <td>
-                                {% if candidato['Coloque o link do seu linkedin/currículo:'] %}
-                                <a class="linkedin" href="{{ candidato['Coloque o link do seu linkedin/currículo:'] }}"
-                                    target="_blank">
-                                    Ver perfil
-                                </a>
-                                {% else %}
-                                Não informado
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn-ver-respostas" data-candidato='{{ candidato | tojson | safe }}'
-                                    onclick="abrirModalPorElemento(this)">
-                                    👁️ Respostas
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="titulo-painel">
+                <div>
+                    <h2>Candidatos recentes</h2>
+                    <p class="descricao-filtro">
+                        Consulte as candidaturas de um determinado mês.
+                    </p>
+                </div>
             </div>
 
+            <!-- =====================================================
+     FILTRO POR MÊS
+     ===================================================== -->
+
+            <div class="mf-filtro-candidatos">
+
+                <div class="mf-filtro-titulo">
+                    Filtrar candidaturas
+                </div>
+
+                <div class="mf-filtro-subtitulo">
+                    Selecione um mês para visualizar apenas as candidaturas
+                    realizadas nesse período.
+                </div>
+
+                <form method="GET" action="{{ url_for('rh_dashboard') }}">
+
+                    <div class="mf-campo-filtro">
+
+                        <label for="mes">
+                            Mês da candidatura
+                        </label>
+
+                        <input type="month" id="mes" name="mes" value="{{ mes_filtro or '' }}">
+
+                    </div>
+
+                    <div class="mf-acoes-filtro">
+
+                        <button type="submit" class="mf-btn-filtrar">
+                            🔎 Filtrar
+                        </button>
+
+                        {% if mes_filtro %}
+
+                        <a href="{{ url_for('rh_dashboard') }}" class="mf-btn-limpar">
+                            Limpar filtro
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="tabela">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Candidato</th>
+                            <th>Telefone</th>
+                            <th>Vaga</th>
+                            <th>Pontuação</th>
+                            <th>LinkedIn / Currículo</th>
+                            <th>Ações</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for candidato in candidatos %}
+
+                        <tr>
+
+                            <!-- CANDIDATO -->
+
+                            <td>
+
+                                <strong>
+                                    {{ candidato.nome }}
+                                </strong>
+
+                                <br>
+
+                                <small class="email-candidato">
+                                    {{ candidato.email }}
+                                </small>
+
+                            </td>
+
+
+                            <!-- TELEFONE -->
+
+                            <td>
+
+                                {% if candidato.telefone %}
+
+                                {{ candidato.telefone }}
+
+                                {% else %}
+
+                                Não informado
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- VAGA -->
+
+                            <td>
+
+                                {% for candidatura in candidato.candidaturas %}
+
+                                <div style="margin-bottom: 8px;">
+
+                                    <strong>
+                                        {{ candidatura.formulario.titulo }}
+                                    </strong>
+
+                                    <br>
+
+                                    <small>
+                                        {{ candidatura.formulario.categoria }}
+                                    </small>
+
+                                    <br>
+
+                                    {% if candidatura.aprovado %}
+
+                                    <span style="
+                    color: #16a34a;
+                    font-size: 12px;
+                    font-weight: 600;
+                ">
+                                        ✓ Aprovado
+                                    </span>
+
+                                    {% else %}
+
+                                    <span style="
+                    color: #dc2626;
+                    font-size: 12px;
+                    font-weight: 600;
+                ">
+                                        ✕ Não aprovado
+                                    </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                {% if not loop.last %}
+                                <hr style="
+                border: 0;
+                border-top: 1px solid #e2e8f0;
+                margin: 8px 0;
+            ">
+                                {% endif %}
+
+                                {% endfor %}
+
+                            </td>
+
+
+                            <!-- PONTUAÇÃO -->
+
+                            <td>
+
+                                {% for candidatura in candidato.candidaturas %}
+
+                                <div style="margin-bottom: 8px;">
+
+                                    <strong class="pontuacao">
+                                        {{ candidatura.pontuacao }} pts
+                                    </strong>
+
+                                    <br>
+
+                                    <small style="color: #64748b;">
+                                        Corte: {{ candidatura.formulario.notaCorte }} pts
+                                    </small>
+
+                                </div>
+
+                                {% if not loop.last %}
+                                <hr style="
+                border: 0;
+                border-top: 1px solid #e2e8f0;
+                margin: 8px 0;
+            ">
+                                {% endif %}
+
+                                {% endfor %}
+
+                            </td>
+
+
+                            <!-- LINKEDIN -->
+
+                            <td>
+
+                                {% if candidato.linkedin %}
+
+                                <a class="linkedin" href="{{ candidato.linkedin }}" target="_blank"
+                                    rel="noopener noreferrer">
+
+                                    Ver perfil ↗
+
+                                </a>
+
+                                {% else %}
+
+                                Não informado
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- AÇÕES -->
+
+                            <td>
+
+                                <button type="button" class="btn-ver-respostas" data-candidato-id="{{ candidato.id }}"
+                                    data-candidato='{{ candidato | tojson }}' onclick="abrirModalPorElemento(this)">
+
+                                    👁️ Respostas
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="6">
+
+                                Nenhum candidato encontrado.
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
             <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
                 <a href="/editRh" style="display: inline-flex; background-color: blue; color: white; text-decoration: none; 
                    padding: 14px 35px; border-radius: 10px; font-weight: bold;">
-                    Gerenciar Perguntas e Pesos
+                    Gerenciar Perguntas e vagas
                 </a>
                 <button onclick="history.back()"
                     style="padding: 14px 35px; border-radius: 10px; font-weight: bold; cursor: pointer;">
@@ -137,7 +331,7 @@
     </main>
 
     <!-- MODAL DE RESPOSTAS -->
-    <div id="modal-respostas" class="modal">
+    <div id="modal-respostas" class="modal" data-candidato-id="">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Respostas do Candidato</h3>
@@ -145,9 +339,32 @@
             </div>
             <div class="modal-body">
                 <div class="info-candidato">
-                    <p><strong>Candidato:</strong> <span id="modal-nome-candidato">-</span></p>
-                    <p><strong>Contato:</strong> <span id="modal-celular-candidato">-</span></p>
-                    <p><strong>Perfil Identificado:</strong> <span id="modal-perfil-candidato">-</span></p>
+
+                    <p>
+                        <strong>Candidato:</strong>
+                        <span id="modal-nome-candidato">-</span>
+                    </p>
+
+                    <p>
+                        <strong>E-mail:</strong>
+                        <span id="modal-email-candidato">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Telefone:</strong>
+                        <span id="modal-celular-candidato">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Vaga:</strong>
+                        <span id="modal-perfil-candidato">-</span>
+                    </p>
+
+                    <p>
+                        <strong>LinkedIn:</strong>
+                        <span id="modal-linkedin-candidato">-</span>
+                    </p>
+
                 </div>
 
                 <hr class="modal-divider">
@@ -155,15 +372,21 @@
                 <div id="modal-lista-perguntas"></div>
             </div>
             <div class="modal-footer">
+
                 <button type="button" class="btn-ver-respostas" style="background-color: #64748b;"
                     onclick="fecharModal()">
                     Fechar
                 </button>
+
+                <button type="button" class="btn-gerar-pdf" onclick="gerarPdfCandidato()">
+                    📄 Gerar relatório
+                </button>
+
             </div>
         </div>
     </div>
 
-    
+
 </body>
 
 </html>

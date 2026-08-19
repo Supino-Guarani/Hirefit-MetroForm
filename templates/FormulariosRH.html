@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Formulários - MetroForm</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit.css') }}">
+</head>
+
+<body>
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="site-header">
+
+    <div class="menu-interno">
+
+        <div class="logo">
+            <h1>MetroForm</h1>
+        </div>
+
+        <nav class="menu-acoes">
+
+            <a href="{{ url_for('rh_dashboard') }}" class="btn-menu btn-voltar-menu">
+                ← Voltar
+            </a>
+
+            <a href="{{ url_for('logout') }}" class="btn-menu btn-sair">
+                Sair
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+    <!-- =====================================================
+         BANNER
+    ====================================================== -->
+
+    <section class="banner">
+        <div class="container">
+
+            <h2>Processos Seletivos</h2>
+
+            <p>
+                Crie e gerencie os formulários das vagas disponíveis.
+            </p>
+
+        </div>
+    </section>
+
+
+    <!-- =====================================================
+         CONTEÚDO PRINCIPAL
+    ====================================================== -->
+
+    <main class="container">
+
+
+        <!-- =================================================
+             DADOS GERAIS
+        ================================================== -->
+
+        <section class="dados-gerais">
+
+            <div class="topo-pagina dados-gerais-topo">
+
+                <div>
+                    <h2>Dados gerais do candidato</h2>
+
+                    <p>
+                        Estas informações serão solicitadas em todos
+                        os processos seletivos.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="lista-dados-gerais">
+
+                <div class="item-dado">
+                    <strong>Nome completo</strong>
+                    <span>Obrigatório</span>
+                </div>
+
+                <div class="item-dado">
+                    <strong>E-mail</strong>
+                    <span>Obrigatório</span>
+                </div>
+
+                <div class="item-dado">
+                    <strong>Telefone</strong>
+                    <span>Obrigatório</span>
+                </div>
+
+                <div class="item-dado">
+                    <strong>Endereço</strong>
+                    <span>Obrigatório</span>
+                </div>
+
+                <div class="item-dado">
+                    <strong>LinkedIn</strong>
+                    <span>Opcional</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CABEÇALHO DAS VAGAS
+        ================================================== -->
+
+        <section class="vagas-section">
+
+            <div class="topo-pagina">
+
+                <div>
+                    <h2>Vagas cadastradas</h2>
+
+                    <p>
+                        Gerencie as vagas e suas perguntas.
+                    </p>
+                </div>
+
+                <button type="button" class="btn btn-primario" onclick="abrirModal('modalNovaVaga')">
+                    + Nova vaga
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 LISTA DE VAGAS
+            ================================================== -->
+
+            {% if formularios %}
+
+            <div class="lista-formularios">
+
+                {% for formulario in formularios %}
+
+                <article class="card-formulario">
+
+
+                    <!-- =========================================
+                         INFORMAÇÕES DA VAGA
+                    ========================================== -->
+
+                    <div class="card-conteudo">
+
+                        <h3>
+                            {{ formulario.titulo }}
+                        </h3>
+
+
+                        {% if formulario.descricao %}
+
+                        <p>
+                            {{ formulario.descricao }}
+                        </p>
+
+                        {% endif %}
+
+
+                        <div class="informacoes-vaga">
+
+                            <span>
+                                {{ formulario.categoria }}
+                            </span>
+
+                            <span>
+                                Nota de corte:
+                                {{ formulario.notaCorte }}
+                            </span>
+
+
+                            {% if formulario.ativo %}
+
+                            <span class="status ativo">
+                                Ativo
+                            </span>
+
+                            {% else %}
+
+                            <span class="status inativo">
+                                Inativo
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         AÇÕES DA VAGA
+                    ========================================== -->
+
+                    <div class="card-acoes">
+
+                        <button type="button" class="btn btn-primario"
+                            onclick="abrirModalEditarVaga('{{ formulario.id }}')">
+                            Editar vaga
+                        </button>
+
+                        <form action="{{ url_for(
+                                'alternar_formulario',
+                                formulario_id=formulario.id
+                            ) }}" method="POST">
+
+                            <button type="submit" class="btn btn-secundario">
+
+                                {% if formulario.ativo %}
+                                Desativar
+                                {% else %}
+                                Ativar
+                                {% endif %}
+
+                            </button>
+
+                        </form>
+
+
+                        <form action="{{ url_for(
+                                'excluir_formulario',
+                                formulario_id=formulario.id
+                            ) }}" method="POST" onsubmit="return confirm(
+                                'Tem certeza que deseja excluir esta vaga?'
+                            );">
+
+                            <button type="submit" class="btn btn-perigo">
+                                Excluir
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         GERENCIAMENTO DAS PERGUNTAS
+                    ========================================== -->
+
+                    <section class="gerenciar-perguntas">
+
+
+                        <!-- BOTÃO ABRIR/FECHAR -->
+
+                        <button type="button" class="btn-perguntas" onclick="togglePerguntas('{{ formulario.id }}')"
+                            aria-expanded="false" aria-controls="perguntas-{{ formulario.id }}">
+
+                            <span>
+                                Perguntas da vaga
+                            </span>
+
+                            <span id="seta-{{ formulario.id }}" class="seta">
+                                ▼
+                            </span>
+
+                        </button>
+
+
+
+                        <!-- LISTA -->
+
+                        <div class="lista-perguntas" id="perguntas-{{ formulario.id }}">
+
+
+                            {% if formulario.perguntas %}
+
+
+                            {% for pergunta in formulario.perguntas %}
+
+                            <article class="item-pergunta">
+
+
+                                <!-- INFORMAÇÕES -->
+
+                                <div class="pergunta-cabecalho">
+
+                                    <div class="pergunta-titulo">
+
+                                        <span class="numero-pergunta">
+                                            {{ loop.index }}
+                                        </span>
+
+                                        <strong>
+                                            {{ pergunta.texto }}
+                                        </strong>
+
+                                    </div>
+
+
+                                    {% if pergunta.obrigatoria %}
+
+                                    <span class="badge-obrigatoria">
+                                        Obrigatória
+                                    </span>
+
+                                    {% else %}
+
+                                    <span class="badge-opcional">
+                                        Opcional
+                                    </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <!-- OPÇÕES -->
+
+                                {% if pergunta.opcoes %}
+
+                                <div class="opcoes-resumo">
+
+                                    {% for opcao in pergunta.opcoes %}
+
+                                    <span class="opcao-resumo">
+
+                                        {{ opcao.texto }}
+
+                                        <small>
+                                            {{ opcao.pontos }} pts
+                                        </small>
+
+                                    </span>
+
+                                    {% endfor %}
+
+                                </div>
+
+                                {% else %}
+
+                                <p class="sem-opcoes">
+                                    Nenhuma opção cadastrada.
+                                </p>
+
+                                {% endif %}
+
+
+
+                                <!-- AÇÕES DA PERGUNTA -->
+
+                                <div class="acoes-pergunta">
+
+                                    <button type="button" class="btn btn-secundario"
+                                        onclick="abrirModalPergunta('{{ pergunta.id }}')">
+                                        Editar
+                                    </button>
+
+
+                                    <form action="{{ url_for(
+                                            'excluir_pergunta',
+                                            pergunta_id=pergunta.id
+                                        ) }}" method="POST" onsubmit="return confirm(
+                                            'Tem certeza que deseja excluir esta pergunta?'
+                                        );">
+
+                                        <button type="submit" class="btn btn-perigo">
+                                            Excluir
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </article>
+
+                            {% endfor %}
+
+
+                            {% else %}
+
+
+                            <!-- SEM PERGUNTAS -->
+
+                            <div class="sem-perguntas">
+
+                                <p>
+                                    Esta vaga ainda não possui perguntas cadastradas.
+                                </p>
+
+                            </div>
+
+                            {% endif %}
+
+
+
+                            <!-- NOVA PERGUNTA -->
+
+                            <button type="button" class="btn btn-nova-pergunta"
+                                onclick="abrirModalNovaPergunta('{{ formulario.id }}')">
+                                + Adicionar pergunta
+                            </button>
+
+                        </div>
+
+                    </section>
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+
+            {% else %}
+
+
+            <!-- =================================================
+                 SEM VAGAS
+            ================================================== -->
+
+            <div class="sem-formularios">
+
+                <h3>
+                    Nenhuma vaga cadastrada
+                </h3>
+
+                <p>
+                    Comece criando o primeiro processo seletivo.
+                </p>
+
+                <button type="button" class="btn btn-primario" onclick="abrirModal('modalNovaVaga')">
+                    + Criar primeira vaga
+                </button>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         MODAL — NOVA VAGA
+    ====================================================== -->
+
+
+    <!-- =====================================================
+     MODAIS: EDITAR VAGA
+====================================================== -->
+
+    {% if formularios %}
+
+    {% for formulario in formularios %}
+
+    <div id="modalEditarVaga-{{ formulario.id }}" class="modal-overlay">
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Editar vaga
+                    </h2>
+
+                    <p>
+                        Altere as informações desta oportunidade.
+                    </p>
+
+                </div>
+
+                <button type="button" class="modal-fechar" onclick="fecharModal('modalEditarVaga-{{ formulario.id }}')">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form method="POST" action="{{ url_for(
+                'editar_formulario',
+                formulario_id=formulario.id
+            ) }}">
+
+                <!-- NOME -->
+
+                <div class="campo">
+
+                    <label for="editar_titulo-{{ formulario.id }}">
+                        Nome da vaga
+                    </label>
+
+                    <input type="text" id="editar_titulo-{{ formulario.id }}" name="titulo"
+                        value="{{ formulario.titulo }}" required placeholder="Ex.: Auxiliar Administrativo">
+
+                </div>
+
+
+                <!-- DESCRIÇÃO -->
+
+                <div class="campo">
+
+                    <label for="editar_descricao-{{ formulario.id }}">
+                        Descrição
+                    </label>
+
+                    <textarea id="editar_descricao-{{ formulario.id }}" name="descricao" rows="4"
+                        placeholder="Descreva as principais informações da vaga...">{{ formulario.descricao or '' }}</textarea>
+
+                </div>
+
+
+                <!-- CATEGORIA / NOTA -->
+
+                <div class="linha-campos">
+
+                    <div class="campo">
+
+                        <label for="editar_categoria-{{ formulario.id }}">
+                            Categoria
+                        </label>
+
+                        <select id="editar_categoria-{{ formulario.id }}" name="categoria" required>
+
+                            <option value="">
+                                Selecione
+                            </option>
+
+                            <option value="Administrativo" {% if formulario.categoria=='Administrativo' %} selected {%
+                                endif %}>
+                                Administrativo
+                            </option>
+
+                            <option value="Operacional" {% if formulario.categoria=='Operacional' %} selected {% endif
+                                %}>
+                                Operacional
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="campo">
+
+                        <label for="editar_nota_corte-{{ formulario.id }}">
+                            Nota de corte
+                        </label>
+
+                        <input type="number" id="editar_nota_corte-{{ formulario.id }}" name="nota_corte" min="0"
+                            value="{{ formulario.notaCorte }}" required>
+
+                    </div>
+
+                </div>
+
+
+                <!-- AÇÕES -->
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-voltar"
+                        onclick="fecharModal('modalEditarVaga-{{ formulario.id }}')">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primario">
+                        Salvar alterações
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    {% endif %}
+
+    <div id="modalNovaVaga" class="modal-overlay">
+
+        <div class="modal">
+
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Nova vaga
+                    </h2>
+
+                    <p>
+                        Cadastre uma nova oportunidade de trabalho.
+                    </p>
+
+                </div>
+
+
+                <button type="button" class="modal-fechar" onclick="fecharModal('modalNovaVaga')" aria-label="Fechar">
+                    ×
+                </button>
+
+            </div>
+
+
+
+            <form method="POST" action="{{ url_for('novo_formulario') }}">
+
+
+                <!-- NOME -->
+
+                <div class="campo">
+
+                    <label for="nova_titulo">
+                        Nome da vaga
+                    </label>
+
+                    <input type="text" id="nova_titulo" name="titulo" required
+                        placeholder="Ex.: Auxiliar Administrativo">
+
+                </div>
+
+
+
+                <!-- DESCRIÇÃO -->
+
+                <div class="campo">
+
+                    <label for="nova_descricao">
+                        Descrição
+                    </label>
+
+                    <textarea id="nova_descricao" name="descricao" rows="4"
+                        placeholder="Descreva as principais informações da vaga..."></textarea>
+
+                </div>
+
+
+
+                <!-- CATEGORIA / NOTA -->
+
+                <div class="linha-campos">
+
+                    <div class="campo">
+
+                        <label for="nova_categoria">
+                            Categoria
+                        </label>
+
+                        <select id="nova_categoria" name="categoria" required>
+
+                            <option value="">
+                                Selecione
+                            </option>
+
+                            <option value="Administrativo">
+                                Administrativo
+                            </option>
+
+                            <option value="Operacional">
+                                Operacional
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="campo">
+
+                        <label for="nova_nota_corte">
+                            Nota de corte
+                        </label>
+
+                        <input type="number" id="nova_nota_corte" name="nota_corte" min="0" value="20" required>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- AÇÕES -->
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-voltar" onclick="fecharModal('modalNovaVaga')">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primario">
+                        Criar vaga
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+     MODAIS — ADICIONAR PERGUNTAS
+====================================================== -->
+
+    {% if formularios %}
+
+    {% for formulario in formularios %}
+
+    <div id="modalNovaPergunta-{{ formulario.id }}" class="modal-overlay">
+
+        <div class="modal modal-perguntas">
+
+
+            <!-- =================================================
+             CABEÇALHO
+        ================================================== -->
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Adicionar perguntas
+                    </h2>
+
+                    <p>
+                        {{ formulario.titulo }}
+                    </p>
+
+                </div>
+
+
+                <button type="button" class="modal-fechar"
+                    onclick="fecharModal('modalNovaPergunta-{{ formulario.id }}')" aria-label="Fechar">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================================
+             FORMULÁRIO
+        ================================================== -->
+
+            <form method="POST" action="{{ url_for(
+                'salvar_perguntas',
+                formulario_id=formulario.id
+            ) }}" onsubmit="prepararPerguntas('{{ formulario.id }}')">
+
+
+                <!-- =================================================
+                 CONTAINER DAS PERGUNTAS
+            ================================================== -->
+
+                <div id="lista-novas-perguntas-{{ formulario.id }}" class="lista-novas-perguntas">
+
+
+                    <!-- =================================================
+                     PERGUNTA INICIAL
+                ================================================== -->
+
+                    <div class="nova-pergunta-item" data-pergunta>
+
+
+                        <!-- CABEÇALHO DA PERGUNTA -->
+
+                        <div class="nova-pergunta-topo">
+
+                            <h3>
+                                Pergunta
+                                <span data-numero-pergunta>1</span>
+                            </h3>
+
+
+                            <button type="button" class="btn-remover-pergunta" onclick="removerPerguntaNova(this)"
+                                aria-label="Remover pergunta">
+
+                                ×
+
+                            </button>
+
+                        </div>
+
+
+
+                        <!-- TEXTO -->
+
+                        <div class="campo">
+
+                            <label>
+                                Pergunta
+                            </label>
+
+                            <textarea data-texto-pergunta rows="4" required
+                                placeholder="Digite a pergunta..."></textarea>
+
+                        </div>
+
+
+
+                        <!-- OBRIGATÓRIA -->
+
+                        <div class="checkbox-campo">
+
+                            <label>
+
+                                <input type="checkbox" data-obrigatoria-pergunta>
+
+                                Pergunta obrigatória
+
+                            </label>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                         OPÇÕES
+                    ================================================== -->
+
+                        <div class="opcoes-modal">
+
+                            <div class="opcoes-modal-header">
+
+                                <div>
+
+                                    <h3>
+                                        Opções de resposta
+                                    </h3>
+
+                                    <p>
+                                        Defina as opções e a pontuação
+                                        de cada resposta.
+                                    </p>
+
+                                </div>
+
+
+                                <button type="button" class="btn btn-secundario"
+                                    onclick="adicionarOpcaoNovaPergunta(this)">
+
+                                    + Opção
+
+                                </button>
+
+                            </div>
+
+
+
+                            <div class="lista-opcoes-modal" data-opcoes>
+
+
+                                <!-- OPÇÃO INICIAL -->
+
+                                <div class="opcao-modal">
+
+                                    <input type="text" data-opcao-texto placeholder="Texto da opção" required>
+
+
+                                    <input type="number" data-opcao-pontos value="0" min="0" placeholder="Pontos"
+                                        required>
+
+
+                                    <button type="button" class="btn-remover-opcao" onclick="removerOpcao(this)"
+                                        aria-label="Remover opção">
+
+                                        ×
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                 ADICIONAR OUTRA PERGUNTA
+            ================================================== -->
+
+                <button type="button" class="btn btn-nova-pergunta"
+                    onclick="adicionarNovaPergunta('{{ formulario.id }}')">
+
+                    + Adicionar outra pergunta
+
+                </button>
+
+
+
+                <!-- =================================================
+                 DADOS ENVIADOS AO SERVIDOR
+            ================================================== -->
+
+                <input type="hidden" name="perguntas_json" id="perguntas-json-{{ formulario.id }}">
+
+
+
+                <!-- =================================================
+                 AÇÕES
+            ================================================== -->
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-voltar"
+                        onclick="fecharModal('modalNovaPergunta-{{ formulario.id }}')">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit" class="btn btn-primario">
+
+                        Salvar perguntas
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         MODAIS — EDITAR PERGUNTA
+    ====================================================== -->
+
+    {% if formularios %}
+
+    {% for formulario in formularios %}
+
+    {% for pergunta in formulario.perguntas %}
+
+    <div id="modalEditarPergunta-{{ pergunta.id }}" class="modal-overlay">
+
+        <div class="modal">
+
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Editar pergunta
+                    </h2>
+
+                    <p>
+                        {{ formulario.titulo }}
+                    </p>
+
+                </div>
+
+
+                <button type="button" class="modal-fechar"
+                    onclick="fecharModal('modalEditarPergunta-{{ pergunta.id }}')" aria-label="Fechar">
+                    ×
+                </button>
+
+            </div>
+
+
+
+            <form method="POST" action="{{ url_for(
+                    'editar_pergunta',
+                    pergunta_id=pergunta.id
+                ) }}">
+
+
+                <!-- PERGUNTA -->
+
+                <div class="campo">
+
+                    <label for="texto-editar-{{ pergunta.id }}">
+                        Pergunta
+                    </label>
+
+                    <textarea id="texto-editar-{{ pergunta.id }}" name="texto" rows="4"
+                        required>{{ pergunta.texto }}</textarea>
+
+                </div>
+
+
+
+                <!-- OBRIGATÓRIA -->
+
+                <div class="checkbox-campo">
+
+                    <label>
+
+                        <input type="checkbox" name="obrigatoria" {% if pergunta.obrigatoria %}checked{% endif %}>
+
+                        Pergunta obrigatória
+
+                    </label>
+
+                </div>
+
+
+
+                <!-- OPÇÕES -->
+
+                <div class="opcoes-modal">
+
+                    <div class="opcoes-modal-header">
+
+                        <div>
+
+                            <h3>
+                                Opções de resposta
+                            </h3>
+
+                            <p>
+                                Edite as opções e suas pontuações.
+                            </p>
+
+                        </div>
+
+
+                        <button type="button" class="btn btn-secundario"
+                            onclick="adicionarOpcaoEdicao('{{ pergunta.id }}')">
+                            + Opção
+                        </button>
+
+                    </div>
+
+
+                    <div id="opcoes-edicao-{{ pergunta.id }}" class="lista-opcoes-modal">
+
+                        {% for opcao in pergunta.opcoes %}
+
+                        <div class="opcao-modal">
+
+                            <input type="hidden" name="opcao_id" value="{{ opcao.id }}">
+
+                            <input type="text" name="opcao_texto" value="{{ opcao.texto }}" placeholder="Texto da opção"
+                                required>
+
+                            <input type="number" name="opcao_pontos" value="{{ opcao.pontos }}" min="0" required>
+
+                            <button type="button" class="btn-remover-opcao" onclick="removerOpcaoEdicao(this)"
+                                aria-label="Remover opção">
+                                ×
+                            </button>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- AÇÕES -->
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-voltar"
+                        onclick="fecharModal('modalEditarPergunta-{{ pergunta.id }}')">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primario">
+                        Salvar alterações
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    {% endfor %}
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="{{ url_for('static', filename='js/Formularios.js') }}"></script>
+
+</body>
+
+</html>

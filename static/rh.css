@@ -10,7 +10,7 @@
 
 :root{
 
-    --azul:#17375E;
+    --azul:#7A1C1C;
     --azul-hover:#204C82;
 
     --vermelho:#A61E22;
@@ -484,4 +484,199 @@ button:hover{
 
     }
 
+}
+
+/* =========================================================
+   FILTRO DE CANDIDATOS - METROFORM
+   Prefixo mf- para evitar conflitos com o CSS existente
+   ========================================================= */
+
+.mf-filtro-candidatos {
+    background: #F8FAFC;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.mf-filtro-candidatos form {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.mf-campo-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.mf-campo-filtro label {
+    color: var(--texto);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.mf-campo-filtro input[type="month"] {
+    height: 44px;
+    min-width: 200px;
+    padding: 0 12px;
+
+    background: var(--branco);
+    color: var(--texto);
+
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.mf-campo-filtro input[type="month"]:focus {
+    border-color: var(--azul);
+
+    box-shadow:
+        0 0 0 3px rgba(122, 28, 28, 0.10);
+}
+
+
+/* =========================================================
+   ÁREA DOS BOTÕES
+   ========================================================= */
+
+.mf-acoes-filtro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* =========================================================
+   BOTÃO FILTRAR
+   ========================================================= */
+
+.mf-btn-filtrar {
+    height: 44px;
+
+    padding: 0 22px;
+
+    background: var(--azul);
+    color: var(--branco);
+
+    border: none;
+    border-radius: 8px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.mf-btn-filtrar:hover {
+    background: var(--azul-hover);
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BOTÃO LIMPAR
+   ========================================================= */
+
+.mf-btn-limpar {
+    height: 44px;
+
+    padding: 0 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--branco);
+    color: var(--texto-claro);
+
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.mf-btn-limpar:hover {
+    background: #F1F5F9;
+    color: var(--texto);
+    border-color: #D1D5DB;
+}
+
+
+/* =========================================================
+   TEXTO AUXILIAR DO FILTRO
+   ========================================================= */
+
+.mf-filtro-titulo {
+    margin-bottom: 15px;
+
+    color: var(--azul);
+
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.mf-filtro-subtitulo {
+    margin-top: -8px;
+    margin-bottom: 18px;
+
+    color: var(--texto-claro);
+
+    font-size: 0.82rem;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE DO FILTRO
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .mf-filtro-candidatos form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mf-campo-filtro {
+        width: 100%;
+    }
+
+    .mf-campo-filtro input[type="month"] {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mf-acoes-filtro {
+        width: 100%;
+    }
+
+    .mf-btn-filtrar,
+    .mf-btn-limpar {
+        flex: 1;
+    }
 }
