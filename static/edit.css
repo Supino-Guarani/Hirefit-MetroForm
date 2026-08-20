@@ -1485,3 +1485,154 @@ select {
     }
 
 }
+
+
+/* =========================================================
+   CATEGORIAS
+========================================================= */
+
+.campo-categoria {
+    position: relative;
+}
+
+
+.categoria-select-wrapper {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+
+.categoria-select-wrapper select {
+
+    flex: 1;
+
+}
+
+
+.btn-nova-categoria {
+
+    width: 44px;
+
+    height: 44px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background-color: var(--azul);
+
+    color: var(--branco);
+
+    font-size: 1.4rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.btn-nova-categoria:hover {
+
+    background-color: var(--azul-hover);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.15);
+
+}
+
+
+.btn-nova-categoria:active {
+
+    transform: translateY(0);
+
+}
+
+
+/* =========================================================
+   MODAL DE CATEGORIA
+========================================================= */
+
+.modal-categoria {
+
+    max-width: 500px;
+
+}
+
+
+.modal-categoria .modal-acoes {
+
+    margin-top: 20px;
+
+}
+
+
+/* =========================================================
+   ERRO DA CATEGORIA
+========================================================= */
+
+.erro-categoria {
+
+    margin-top: -8px;
+
+    margin-bottom: 15px;
+
+    padding: 10px 13px;
+
+    border-radius: 8px;
+
+    background-color: #fee2e2;
+
+    border: 1px solid #fecaca;
+
+    color: #b91c1c;
+
+    font-size: 0.82rem;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .categoria-select-wrapper {
+
+        gap: 6px;
+
+    }
+
+
+    .btn-nova-categoria {
+
+        width: 42px;
+
+        height: 42px;
+
+    }
+
+}

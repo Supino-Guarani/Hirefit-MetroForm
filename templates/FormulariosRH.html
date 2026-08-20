@@ -18,27 +18,27 @@
 
     <header class="site-header">
 
-    <div class="menu-interno">
+        <div class="menu-interno">
 
-        <div class="logo">
-            <h1>MetroForm</h1>
+            <div class="logo">
+                <h1>MetroForm</h1>
+            </div>
+
+            <nav class="menu-acoes">
+
+                <a href="{{ url_for('rh_dashboard') }}" class="btn-menu btn-voltar-menu">
+                    ← Voltar
+                </a>
+
+                <a href="{{ url_for('logout') }}" class="btn-menu btn-sair">
+                    Sair
+                </a>
+
+            </nav>
+
         </div>
 
-        <nav class="menu-acoes">
-
-            <a href="{{ url_for('rh_dashboard') }}" class="btn-menu btn-voltar-menu">
-                ← Voltar
-            </a>
-
-            <a href="{{ url_for('logout') }}" class="btn-menu btn-sair">
-                Sair
-            </a>
-
-        </nav>
-
-    </div>
-
-</header>
+    </header>
 
 
     <!-- =====================================================
@@ -136,6 +136,9 @@
 
                 <button type="button" class="btn btn-primario" onclick="abrirModal('modalNovaVaga')">
                     + Nova vaga
+                </button>
+                <button type="button" class="btn btn-secundario" onclick="abrirModal('modal-nova-categoria')">
+                    + Nova categoria
                 </button>
 
             </div>
@@ -262,8 +265,9 @@
 
                         <!-- BOTÃO ABRIR/FECHAR -->
 
-                        <button type="button" class="btn-perguntas" onclick="togglePerguntas('{{ formulario.id }}')"
-                            aria-expanded="false" aria-controls="perguntas-{{ formulario.id }}">
+                        <button type="button" class="btn-perguntas" data-formulario-id="{{ formulario.id }}"
+                            onclick="togglePerguntas('{{ formulario.id }}')" aria-expanded="false"
+                            aria-controls="perguntas-{{ formulario.id }}">
 
                             <span>
                                 Perguntas da vaga
@@ -528,29 +532,37 @@
 
                 <div class="linha-campos">
 
-                    <div class="campo">
+                    <div class="campo campo-categoria">
 
                         <label for="editar_categoria-{{ formulario.id }}">
                             Categoria
                         </label>
 
-                        <select id="editar_categoria-{{ formulario.id }}" name="categoria" required>
+                        <div class="categoria-select-wrapper">
 
-                            <option value="">
-                                Selecione
-                            </option>
+                            <select id="editar_categoria-{{ formulario.id }}" name="categoria_id" required>
 
-                            <option value="Administrativo" {% if formulario.categoria=='Administrativo' %} selected {%
-                                endif %}>
-                                Administrativo
-                            </option>
+                                <option value="">
+                                    Selecione
+                                </option>
 
-                            <option value="Operacional" {% if formulario.categoria=='Operacional' %} selected {% endif
-                                %}>
-                                Operacional
-                            </option>
+                                {% for categoria in categorias %}
 
-                        </select>
+                                <option value="{{ categoria.id }}" {% if formulario.categoriaRel and
+                                    formulario.categoriaRel.id==categoria.id %} selected {% endif %}>
+                                    {{ categoria.nome }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <button type="button" class="btn-nova-categoria" onclick="abrirModalNovaCategoria()"
+                                title="Criar nova categoria">
+                                +
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -659,27 +671,34 @@
 
                 <div class="linha-campos">
 
-                    <div class="campo">
+                    <div class="campo campo-categoria">
 
                         <label for="nova_categoria">
                             Categoria
                         </label>
 
-                        <select id="nova_categoria" name="categoria" required>
+                        <div class="categoria-select-wrapper">
 
-                            <option value="">
-                                Selecione
-                            </option>
+                            <select id="nova_categoria" name="categoria_id" required>
 
-                            <option value="Administrativo">
-                                Administrativo
-                            </option>
+                                <option value="">
+                                    Selecione
+                                </option>
 
-                            <option value="Operacional">
-                                Operacional
-                            </option>
+                                {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">
+                                    {{ categoria.nome }}
+                                </option>
+                                {% endfor %}
 
-                        </select>
+                            </select>
+
+                            <button type="button" class="btn-nova-categoria" onclick="abrirModalNovaCategoria()"
+                                title="Criar nova categoria">
+                                +
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -719,6 +738,126 @@
     </div>
 
 
+    <!-- =====================================================
+     MODAL — NOVA CATEGORIA
+====================================================== -->
+
+    <div id="modalNovaCategoria" class="modal-overlay">
+
+        <div class="modal modal-categoria">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Nova categoria
+                    </h2>
+
+                    <p>
+                        Cadastre uma nova categoria para as vagas.
+                    </p>
+
+                </div>
+
+                <button type="button" class="modal-fechar" onclick="fecharModal('modalNovaCategoria')"
+                    aria-label="Fechar">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="formNovaCategoria">
+
+                <div class="campo">
+
+                    <label for="nova_categoria_nome">
+                        Nome da categoria
+                    </label>
+
+                    <input type="text" id="nova_categoria_nome" name="nome" maxlength="100" required
+                        placeholder="Ex.: Recursos Humanos">
+
+                </div>
+
+
+                <div id="erro-nova-categoria" class="erro-categoria" style="display: none;">
+                </div>
+
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-voltar" onclick="fecharModal('modalNovaCategoria')">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primario" id="btnSalvarCategoria">
+                        Criar categoria
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+     MODAL — NOVA CATEGORIA
+========================================================= -->
+
+    <div class="modal-overlay" id="modal-nova-categoria">
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+                    <h2>Nova categoria</h2>
+
+                    <p>
+                        Cadastre uma nova categoria para organizar as vagas.
+                    </p>
+                </div>
+
+                <button type="button" class="modal-fechar" onclick="fecharModal('modal-nova-categoria')">
+                    ×
+                </button>
+
+            </div>
+
+            <form id="form-nova-categoria" method="POST" action="{{ url_for('nova_categoria') }}">
+
+                <div class="campo">
+
+                    <label for="nome-categoria">
+                        Nome da categoria
+                    </label>
+
+                    <input type="text" id="nome-categoria" name="nome" placeholder="Ex.: Financeiro" maxlength="100"
+                        required>
+
+                </div>
+
+                <div class="modal-acoes">
+
+                    <button type="button" class="btn btn-secundario" onclick="fecharModal('modal-nova-categoria')">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primario">
+                        Criar categoria
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
 
     <!-- =====================================================
      MODAIS — ADICIONAR PERGUNTAS

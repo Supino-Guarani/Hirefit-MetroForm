@@ -25,6 +25,65 @@ app.secret_key = 'RecursosHumanos2026@'
 db = Prisma()
 db.connect()
 
+def inicializar_categorias():
+
+    categorias_padrao = [
+        'Administrativo',
+        'Operacional'
+    ]
+
+    for nome in categorias_padrao:
+
+        categoria = db.categoria.find_unique(
+            where={
+                'nome': nome
+            }
+        )
+
+        if not categoria:
+
+            db.categoria.create(
+                data={
+                    'nome': nome
+                }
+            )
+
+
+def atualizar_categorias_antigas():
+
+    formularios = db.formulario.find_many()
+
+    for formulario in formularios:
+
+        # Se já possui categoria relacionada,
+        # não precisamos fazer nada.
+        if formulario.categoriaId:
+            continue
+
+        if not formulario.categoria:
+            continue
+
+        categoria = db.categoria.find_unique(
+            where={
+                'nome': formulario.categoria.strip()
+            }
+        )
+
+        if not categoria:
+            continue
+
+        db.formulario.update(
+            where={
+                'id': formulario.id
+            },
+            data={
+                'categoriaId': categoria.id
+            }
+        )
+
+inicializar_categorias()
+atualizar_categorias_antigas()
+
 @app.route("/")
 def homepage():
     formularios = db.formulario.find_many(
@@ -911,12 +970,20 @@ def gerar_pdf_candidato(candidato_id):
 @app.route('/editRh')
 def edit_rh_page():
 
-    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
         return redirect(url_for('login'))
+
+    # =====================================================
+    # BUSCA AS VAGAS
+    # =====================================================
 
     formularios = db.formulario.find_many(
         order={'criadoEm': 'desc'},
         include={
+            'categoriaRel': True,
             'perguntas': {
                 'include': {
                     'opcoes': True
@@ -928,43 +995,247 @@ def edit_rh_page():
         }
     )
 
-    vaga_aberta = request.args.get('vaga', type=int)
+    # =====================================================
+    # BUSCA AS CATEGORIAS ATIVAS
+    # =====================================================
+
+    categorias = db.categoria.find_many(
+        where={
+            'ativo': True
+        },
+        order={
+            'nome': 'asc'
+        }
+    )
+
+    # =====================================================
+    # VAGA ABERTA
+    # =====================================================
+
+    vaga_aberta = request.args.get(
+        'vaga',
+        type=int
+    )
 
     return render_template(
         'FormulariosRH.html',
         formularios=formularios,
+        categorias=categorias,
         vaga_aberta=vaga_aberta
+    )
+
+
+
+# ============================================================
+# CRIAR CATEGORIA
+# ============================================================
+
+@app.route('/categoria/nova', methods=['POST'])
+def nova_categoria():
+
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
+        return redirect(url_for('login'))
+
+    nome = request.form.get(
+        'nome',
+        ''
+    ).strip()
+
+    # =====================================================
+    # VALIDAÇÃO
+    # =====================================================
+
+    if not nome:
+
+        return {
+            'sucesso': False,
+            'erro': 'Informe o nome da categoria.'
+        }, 400
+
+    # =====================================================
+    # PROCURA CATEGORIA EXISTENTE
+    # =====================================================
+    # Fazemos a comparação no Python para evitar duplicatas
+    # como:
+    #
+    # Administrativo
+    # administrativo
+    # ADMINISTRATIVO
+    #
+    # Também removemos espaços extras.
+
+    categorias = db.categoria.find_many()
+
+    nome_normalizado = ' '.join(
+        nome.split()
+    ).casefold()
+
+    for categoria in categorias:
+
+        nome_existente = ' '.join(
+            categoria.nome.split()
+        ).casefold()
+
+        if nome_existente == nome_normalizado:
+
+            return {
+                'sucesso': False,
+                'erro': 'Esta categoria já existe.'
+            }, 409
+
+    # =====================================================
+    # CRIA A CATEGORIA
+    # =====================================================
+
+    categoria = db.categoria.create(
+        data={
+            'nome': nome
+        }
+    )
+
+    # =====================================================
+    # RESPOSTA AJAX
+    # =====================================================
+
+    if request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest':
+
+        return {
+            'sucesso': True,
+            'mensagem': 'Categoria criada com sucesso.',
+            'categoria': {
+                'id': categoria.id,
+                'nome': categoria.nome
+            }
+        }
+
+    # =====================================================
+    # ENVIO NORMAL
+    # =====================================================
+
+    return redirect(
+        url_for('edit_rh_page')
     )
 
 
 @app.route('/formulario/novo', methods=['POST'])
 def novo_formulario():
 
-    if 'usuario_logado' not in session or session.get('role') not in ['rh', 'admin']:
+    if (
+        'usuario_logado' not in session
+        or session.get('role') not in ['rh', 'admin']
+    ):
         return redirect(url_for('login'))
 
-    titulo = request.form.get('titulo', '').strip()
-    descricao = request.form.get('descricao', '').strip()
-    categoria = request.form.get('categoria', '').strip()
-    nota_corte = request.form.get('nota_corte', '0')
+    titulo = request.form.get(
+        'titulo',
+        ''
+    ).strip()
+
+    descricao = request.form.get(
+        'descricao',
+        ''
+    ).strip()
+
+    categoria_id = request.form.get(
+        'categoria_id',
+        ''
+    ).strip()
+
+    nota_corte = request.form.get(
+        'nota_corte',
+        '0'
+    )
+
+    # =====================================================
+    # VALIDAÇÃO DO TÍTULO
+    # =====================================================
 
     if not titulo:
-        return redirect(url_for('edit_rh_page'))
+        return redirect(
+            url_for('edit_rh_page')
+        )
+
+    # =====================================================
+    # CONVERTE CATEGORIA
+    # =====================================================
+
+    try:
+        categoria_id = int(categoria_id)
+    except (ValueError, TypeError):
+        categoria_id = None
+
+    # =====================================================
+    # BUSCA A CATEGORIA
+    # =====================================================
+
+    categoria = None
+
+    if categoria_id:
+
+        categoria = db.categoria.find_unique(
+            where={
+                'id': categoria_id
+            }
+        )
+
+    # =====================================================
+    # SE NÃO ENCONTROU CATEGORIA
+    # =====================================================
+
+    if not categoria:
+
+        return redirect(
+            url_for('edit_rh_page')
+        )
+
+    # =====================================================
+    # CONVERTE NOTA DE CORTE
+    # =====================================================
 
     try:
         nota_corte = int(nota_corte)
+
     except (ValueError, TypeError):
         nota_corte = 0
+
+    # =====================================================
+    # CRIA A VAGA
+    # =====================================================
 
     formulario = db.formulario.create(
         data={
             'titulo': titulo,
-            'descricao': descricao if descricao else None,
-            'categoria': categoria,
+
+            'descricao':
+                descricao
+                if descricao
+                else None,
+
+            # Mantemos o campo antigo funcionando
+            'categoria':
+                categoria.nome,
+
+            # Nova relação
+            'categoriaRel': {
+                'connect': {
+                    'id': categoria.id
+                }
+            },
+
             'notaCorte': nota_corte,
+
             'ativo': True
         }
     )
+
+    # =====================================================
+    # VOLTA PARA A VAGA CRIADA
+    # =====================================================
 
     return redirect(
         url_for(
@@ -973,7 +1244,10 @@ def novo_formulario():
         )
     )
 
-@app.route('/formulario/<int:formulario_id>/editar', methods=['GET', 'POST'])
+@app.route(
+    '/formulario/<int:formulario_id>/editar',
+    methods=['GET', 'POST']
+)
 def editar_formulario(formulario_id):
 
     if (
@@ -982,9 +1256,16 @@ def editar_formulario(formulario_id):
     ):
         return redirect(url_for('login'))
 
+    # =====================================================
+    # BUSCA A VAGA
+    # =====================================================
+
     formulario = db.formulario.find_unique(
-        where={'id': formulario_id},
+        where={
+            'id': formulario_id
+        },
         include={
+            'categoriaRel': True,
             'perguntas': {
                 'include': {
                     'opcoes': True
@@ -997,45 +1278,161 @@ def editar_formulario(formulario_id):
     )
 
     if not formulario:
-        return redirect(url_for('edit_rh_page'))
+        return redirect(
+            url_for('edit_rh_page')
+        )
+
+    # =====================================================
+    # POST
+    # =====================================================
 
     if request.method == 'POST':
 
-        titulo = request.form.get('titulo', '').strip()
-        descricao = request.form.get('descricao', '').strip()
-        categoria = request.form.get('categoria', '').strip()
-        nota_corte = request.form.get('nota_corte', '0')
+        titulo = request.form.get(
+            'titulo',
+            ''
+        ).strip()
+
+        descricao = request.form.get(
+            'descricao',
+            ''
+        ).strip()
+
+        categoria_id = request.form.get(
+            'categoria_id',
+            ''
+        ).strip()
+
+        nota_corte = request.form.get(
+            'nota_corte',
+            '0'
+        )
+
+        # =================================================
+        # VALIDA TÍTULO
+        # =================================================
+
+        if not titulo:
+
+            if request.headers.get(
+                'X-Requested-With'
+            ) == 'XMLHttpRequest':
+
+                return {
+                    'sucesso': False,
+                    'erro': 'Informe o título da vaga.'
+                }, 400
+
+            return redirect(
+                url_for(
+                    'edit_rh_page',
+                    vaga=formulario_id
+                )
+            )
+
+        # =================================================
+        # CONVERTE CATEGORIA
+        # =================================================
+
+        try:
+            categoria_id = int(categoria_id)
+
+        except (ValueError, TypeError):
+            categoria_id = None
+
+        # =================================================
+        # BUSCA CATEGORIA
+        # =================================================
+
+        categoria = None
+
+        if categoria_id:
+
+            categoria = db.categoria.find_unique(
+                where={
+                    'id': categoria_id
+                }
+            )
+
+        if not categoria:
+
+            if request.headers.get(
+                'X-Requested-With'
+            ) == 'XMLHttpRequest':
+
+                return {
+                    'sucesso': False,
+                    'erro': 'Selecione uma categoria válida.'
+                }, 400
+
+            return redirect(
+                url_for(
+                    'edit_rh_page',
+                    vaga=formulario_id
+                )
+            )
+
+        # =================================================
+        # NOTA DE CORTE
+        # =================================================
 
         try:
             nota_corte = int(nota_corte)
+
         except (ValueError, TypeError):
             nota_corte = 0
 
+        # =================================================
+        # ATUALIZA A VAGA
+        # =================================================
+
         db.formulario.update(
-            where={'id': formulario_id},
+            where={
+                'id': formulario_id
+            },
             data={
+
                 'titulo': titulo,
-                'descricao': descricao if descricao else None,
-                'categoria': categoria,
+
+                'descricao':
+                    descricao
+                    if descricao
+                    else None,
+
+                # Mantém compatibilidade
+                'categoria':
+                    categoria.nome,
+
+                # Nova relação
+                'categoriaRel': {
+                    'connect': {
+                        'id': categoria.id
+                    }
+                },
+
                 'notaCorte': nota_corte
             }
         )
 
-        # ============================================
+        # =================================================
         # RESPOSTA AJAX
-        # ============================================
+        # =================================================
 
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.headers.get(
+            'X-Requested-With'
+        ) == 'XMLHttpRequest':
 
             return {
                 'sucesso': True,
-                'mensagem': 'Vaga atualizada com sucesso.',
-                'formulario_id': formulario_id
+                'mensagem':
+                    'Vaga atualizada com sucesso.',
+                'formulario_id':
+                    formulario_id
             }
 
-        # ============================================
+        # =================================================
         # ENVIO NORMAL
-        # ============================================
+        # =================================================
 
         return redirect(
             url_for(
@@ -1043,6 +1440,10 @@ def editar_formulario(formulario_id):
                 vaga=formulario_id
             )
         )
+
+    # =====================================================
+    # GET
+    # =====================================================
 
     return redirect(
         url_for(
@@ -1513,6 +1914,19 @@ def excluir_formulario(formulario_id):
 )
 def salvar_perguntas(formulario_id):
 
+    print(
+    f'========== SALVANDO PERGUNTAS =========='
+    )
+    print(
+        f'FORMULARIO: {formulario_id}'
+        )
+    print(
+    f'PERGUNTAS RECEBIDAS: {request.form.get("perguntas_json")}'
+    )
+    print(
+        f'========================================='
+        )
+
     if (
         'usuario_logado' not in session
         or session.get('role') not in ['rh', 'admin']
@@ -1851,6 +2265,9 @@ def responder_formulario(formulario_id):
         formulario=formulario,
         candidato=candidato
     )
+
+
+
 
 @app.route('/logout')
 def logout():
